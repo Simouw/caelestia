@@ -26,7 +26,7 @@ echo "[+] Target Quickshell config: $QS_CONFIG"
 # 1. Copy modules and services
 echo "[+] Copying QML modules & services..."
 mkdir -p "$QS_CONFIG/modules/bar/components" \
-         "$QS_CONFIG/modules/bar/popouts" \
+         "$QS_CONFIG/modules/bar/popouts/icons" \
          "$QS_CONFIG/modules/dashboard/notes" \
          "$QS_CONFIG/modules/gitpanel" \
          "$QS_CONFIG/modules/sidebar" \
@@ -35,11 +35,11 @@ mkdir -p "$QS_CONFIG/modules/bar/components" \
 cp -r "$ROOT/modules/gitpanel/"* "$QS_CONFIG/modules/gitpanel/"
 cp "$ROOT/modules/dashboard/NotesTab.qml" "$QS_CONFIG/modules/dashboard/NotesTab.qml"
 cp -r "$ROOT/modules/dashboard/notes/"* "$QS_CONFIG/modules/dashboard/notes/"
-cp "$ROOT/modules/bar/components/NotesButton.qml" "$QS_CONFIG/modules/bar/components/NotesButton.qml"
 cp "$ROOT/modules/bar/components/TimerButton.qml" "$QS_CONFIG/modules/bar/components/TimerButton.qml"
 cp "$ROOT/modules/bar/components/AiButton.qml" "$QS_CONFIG/modules/bar/components/AiButton.qml"
 cp "$ROOT/modules/bar/popouts/TimerPopout.qml" "$QS_CONFIG/modules/bar/popouts/TimerPopout.qml"
 cp "$ROOT/modules/bar/popouts/AiPopout.qml" "$QS_CONFIG/modules/bar/popouts/AiPopout.qml"
+cp -r "$ROOT/modules/bar/popouts/icons/"* "$QS_CONFIG/modules/bar/popouts/icons/"
 cp "$ROOT/modules/sidebar/Content.qml" "$QS_CONFIG/modules/sidebar/Content.qml"
 cp "$ROOT/services/CaelestiaGit.qml" "$QS_CONFIG/services/CaelestiaGit.qml"
 cp "$ROOT/services/NotesStore.qml" "$QS_CONFIG/services/NotesStore.qml"

@@ -27,13 +27,13 @@ Item {
             MaterialIcon {
                 text: "alarm"
                 fontStyle: Tokens.font.icon.small
-                color: Colours.tPalette.m3primary
+                color: Colours.palette.m3primary
             }
 
             StyledText {
                 text: "Minuteur"
                 font: Tokens.font.title.small
-                color: Colours.tPalette.m3onSurface
+                color: Colours.palette.m3onSurface
             }
 
             Item { Layout.fillWidth: true }
@@ -48,7 +48,7 @@ Item {
                     anchors.centerIn: parent
                     text: "close"
                     fontStyle: Tokens.font.icon.small
-                    color: Colours.tPalette.m3onSurfaceVariant
+                    color: Colours.palette.m3onSurfaceVariant
                 }
             }
         }
@@ -64,7 +64,7 @@ Item {
                 text: TimerService.formatTime(TimerService.remainingSeconds)
                 font.pointSize: 24
                 font.bold: true
-                color: Colours.tPalette.m3primary
+                color: Colours.palette.m3primary
             }
 
             RowLayout {
@@ -75,7 +75,7 @@ Item {
                     Layout.fillWidth: true
                     implicitHeight: 32
                     radius: Tokens.rounding.small
-                    color: plusArea.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer
+                    color: plusArea.containsMouse ? Colours.palette.m3surfaceContainerHighest : Colours.palette.m3surfaceContainer
 
                     Behavior on color { ColorAnimation { duration: 100 } }
 
@@ -91,7 +91,7 @@ Item {
                         anchors.centerIn: parent
                         text: "+5 min"
                         font: Tokens.font.label.small
-                        color: Colours.tPalette.m3onSurface
+                        color: Colours.palette.m3onSurface
                     }
                 }
 
@@ -99,7 +99,7 @@ Item {
                     Layout.fillWidth: true
                     implicitHeight: 32
                     radius: Tokens.rounding.small
-                    color: stopArea.containsMouse ? Colours.tPalette.m3error : Colours.tPalette.m3errorContainer
+                    color: stopArea.containsMouse ? Colours.palette.m3error : Colours.palette.m3errorContainer
 
                     Behavior on color { ColorAnimation { duration: 100 } }
 
@@ -115,7 +115,7 @@ Item {
                         anchors.centerIn: parent
                         text: "Arrêter"
                         font: Tokens.font.label.small
-                        color: stopArea.containsMouse ? Colours.tPalette.m3onError : Colours.tPalette.m3onErrorContainer
+                        color: stopArea.containsMouse ? Colours.palette.m3onError : Colours.palette.m3onErrorContainer
                     }
                 }
             }
@@ -141,7 +141,7 @@ Item {
                     Layout.fillWidth: true
                     implicitHeight: 34
                     radius: Tokens.rounding.small
-                    color: pArea.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : Colours.tPalette.m3surfaceContainer
+                    color: pArea.containsMouse ? Colours.palette.m3surfaceContainerHighest : Colours.palette.m3surfaceContainer
 
                     Behavior on color { ColorAnimation { duration: 100 } }
 
@@ -160,7 +160,7 @@ Item {
                         anchors.centerIn: parent
                         text: modelData.label
                         font: Tokens.font.label.medium
-                        color: Colours.tPalette.m3onSurface
+                        color: Colours.palette.m3onSurface
                     }
                 }
             }

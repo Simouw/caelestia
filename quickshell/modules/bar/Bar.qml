@@ -108,16 +108,7 @@ ColumnLayout {
 
         model: ScriptModel {
             values: {
-                let res = root.Config.bar.entries.values.filter(e => e.enabled);
-                if (!res.some(e => e.id === "notes")) {
-                    const statusIdx = res.findIndex(e => e.id === "statusIcons");
-                    const insertIdx = statusIdx >= 0 ? statusIdx : Math.max(0, res.length - 1);
-                    res = [
-                        ...res.slice(0, insertIdx),
-                        { id: "notes", enabled: true },
-                        ...res.slice(insertIdx)
-                    ];
-                }
+                let res = root.Config.bar.entries.values.filter(e => e.enabled && e.id !== "notes");
                 if (!res.some(e => e.id === "timer")) {
                     const statusIdx = res.findIndex(e => e.id === "statusIcons");
                     const insertIdx = statusIdx >= 0 ? statusIdx : Math.max(0, res.length - 1);
@@ -190,15 +181,6 @@ ColumnLayout {
                 delegate: EntryWrapper {
                     Clock {
                         objectName: "taskbarClock"
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "notes"
-                delegate: EntryWrapper {
-                    NotesButton {
-                        objectName: "taskbarNotesButton"
-                        screenState: root.screenState
                     }
                 }
             }

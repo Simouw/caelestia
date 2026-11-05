@@ -28,7 +28,7 @@ Item {
             MaterialIcon {
                 text: "auto_awesome"
                 fontStyle: Tokens.font.icon.small
-                color: Colours.tPalette.m3primary
+                color: Colours.palette.m3primary
             }
 
             ColumnLayout {
@@ -37,7 +37,7 @@ Item {
                 StyledText {
                     text: "Assistants IA"
                     font: Tokens.font.title.small
-                    color: Colours.tPalette.m3onSurface
+                    color: Colours.palette.m3onSurface
                 }
 
                 StyledText {
@@ -50,7 +50,7 @@ Item {
                         return `${count} détecté${count > 1 ? "s" : ""} sur ${AiService.tools.length} CLI`;
                     }
                     font: Tokens.font.label.small
-                    color: Colours.tPalette.m3onSurfaceVariant
+                    color: Colours.palette.m3onSurfaceVariant
                 }
             }
 
@@ -67,7 +67,7 @@ Item {
                     anchors.centerIn: parent
                     text: "refresh"
                     fontStyle: Tokens.font.icon.small
-                    color: AiService.scanning ? Colours.tPalette.m3primary : Colours.tPalette.m3onSurfaceVariant
+                    color: AiService.scanning ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
                     rotation: AiService.scanning ? 360 : 0
                     Behavior on rotation {
                         NumberAnimation { duration: 600 }
@@ -86,7 +86,7 @@ Item {
                     anchors.centerIn: parent
                     text: "close"
                     fontStyle: Tokens.font.icon.small
-                    color: Colours.tPalette.m3onSurfaceVariant
+                    color: Colours.palette.m3onSurfaceVariant
                 }
             }
         }
@@ -105,15 +105,13 @@ Item {
                 radius: Tokens.rounding.medium
 
                 color: !modelData.installed
-                    ? Colours.tPalette.m3surfaceContainerLowest
-                    : (cardArea.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainerLow)
+                    ? Colours.palette.m3surfaceContainerLowest
+                    : (cardArea.containsMouse ? Colours.palette.m3surfaceContainerHighest : Colours.palette.m3surfaceContainer)
 
                 border.color: modelData.installed && cardArea.containsMouse
-                    ? Colours.tPalette.m3primary
-                    : Colours.tPalette.m3outlineVariant
+                    ? Colours.palette.m3primary
+                    : Colours.palette.m3outlineVariant
                 border.width: 1
-
-                opacity: modelData.installed ? 1.0 : 0.55
 
                 Behavior on color { ColorAnimation { duration: 120 } }
                 Behavior on border.color { ColorAnimation { duration: 120 } }
@@ -139,19 +137,15 @@ Item {
                     anchors.margins: Tokens.padding.medium
                     spacing: Tokens.spacing.medium
 
-                    // Tool Icon container
-                    StyledRect {
-                        implicitWidth: 38
-                        implicitHeight: 38
-                        radius: Tokens.rounding.small
-                        color: modelData.installed ? Colours.tPalette.m3primaryContainer : Colours.tPalette.m3surfaceContainerHigh
-
-                        MaterialIcon {
-                            anchors.centerIn: parent
-                            text: modelData.icon
-                            fontStyle: Tokens.font.icon.small
-                            color: modelData.installed ? Colours.tPalette.m3onPrimaryContainer : Colours.tPalette.m3onSurfaceVariant
-                        }
+                    // Real CLI Logo SVG
+                    Image {
+                        source: "icons/" + modelData.id + ".svg"
+                        sourceSize.width: 36
+                        sourceSize.height: 36
+                        width: 36
+                        height: 36
+                        fillMode: Image.PreserveAspectFit
+                        opacity: modelData.installed ? 1.0 : 0.4
                     }
 
                     // Tool Details
@@ -166,7 +160,7 @@ Item {
                             StyledText {
                                 text: modelData.name
                                 font: Tokens.font.title.small
-                                color: Colours.tPalette.m3onSurface
+                                color: modelData.installed ? Colours.palette.m3onSurface : Colours.palette.m3outline
                             }
 
                             Item { Layout.fillWidth: true }
@@ -176,14 +170,14 @@ Item {
                                 implicitWidth: badgeText.implicitWidth + 12
                                 implicitHeight: 20
                                 radius: Tokens.rounding.full
-                                color: modelData.installed ? Colours.tPalette.m3primaryContainer : Colours.tPalette.m3surfaceContainerHigh
+                                color: modelData.installed ? Colours.palette.m3primaryContainer : Colours.palette.m3surfaceContainerHigh
 
                                 StyledText {
                                     id: badgeText
                                     anchors.centerIn: parent
                                     text: modelData.installed ? "Installé" : "Non installé"
                                     font: Tokens.font.label.small
-                                    color: modelData.installed ? Colours.tPalette.m3onPrimaryContainer : Colours.tPalette.m3outline
+                                    color: modelData.installed ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3outline
                                 }
                             }
                         }
@@ -192,7 +186,7 @@ Item {
                             Layout.fillWidth: true
                             text: modelData.desc
                             font: Tokens.font.body.small
-                            color: Colours.tPalette.m3onSurfaceVariant
+                            color: modelData.installed ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3outlineVariant
                             elide: Text.ElideRight
                         }
 
@@ -202,7 +196,7 @@ Item {
                             text: modelData.binPath
                             font.pointSize: 9
                             font.family: "monospace"
-                            color: Colours.tPalette.m3outline
+                            color: Colours.palette.m3outline
                             elide: Text.ElideMiddle
                         }
                     }
