@@ -16,7 +16,7 @@ Item {
     readonly property var local: repo ? repo.local : null
     readonly property bool isMissing: !repo || !repo.localPath
 
-    implicitWidth: 300
+    implicitWidth: 280
     implicitHeight: 52
     width: ListView.view ? ListView.view.width : implicitWidth
     clip: true

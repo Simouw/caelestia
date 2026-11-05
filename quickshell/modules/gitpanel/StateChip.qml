@@ -29,26 +29,31 @@ StyledRect {
         }
     }
 
-    implicitWidth: row.implicitWidth + 12
+    implicitWidth: chipRow.implicitWidth + 14
     implicitHeight: 20
+    Layout.preferredWidth: implicitWidth
+    Layout.minimumWidth: implicitWidth
     radius: Tokens.rounding.full
     color: palette.bg
 
     RowLayout {
-        id: row
-        anchors.centerIn: parent
+        id: chipRow
+        anchors.fill: parent
+        anchors.leftMargin: 6
+        anchors.rightMargin: 6
         spacing: 4
 
         StyledRect {
             Layout.alignment: Qt.AlignVCenter
-            implicitWidth: 5
-            implicitHeight: 5
+            implicitWidth: 6
+            implicitHeight: 6
             radius: Tokens.rounding.full
             color: root.palette.dot
         }
 
         StyledText {
             Layout.alignment: Qt.AlignVCenter
+            Layout.fillWidth: false
             text: root.label || root.labelFor(root.state)
             color: root.palette.fg
             font: Tokens.font.label.small

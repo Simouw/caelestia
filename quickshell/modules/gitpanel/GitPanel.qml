@@ -15,8 +15,10 @@ Item {
 
     implicitWidth: Math.min(1040, (Quickshell.screens.length ? Quickshell.screens[0].width : 1920) - 80)
     implicitHeight: Math.min(620, (Quickshell.screens.length ? Quickshell.screens[0].height : 1080) - 160)
-    width: implicitWidth
-    height: implicitHeight
+    Layout.preferredWidth: implicitWidth
+    Layout.preferredHeight: implicitHeight
+    Layout.fillWidth: true
+    Layout.fillHeight: true
 
     readonly property var repo: CaelestiaGit.selected
     readonly property bool hasLocal: !!repo && !!repo.localPath
@@ -55,9 +57,9 @@ Item {
         //  LEFT COLUMN: Repositories List & Manual Scanner
         // =====================================================================
         StyledRect {
-            Layout.preferredWidth: 310
-            Layout.minimumWidth: 310
-            Layout.maximumWidth: 310
+            Layout.preferredWidth: 320
+            Layout.minimumWidth: 320
+            Layout.maximumWidth: 320
             Layout.fillHeight: true
             radius: Tokens.rounding.large
             color: Colours.tPalette.m3surfaceContainerLow
@@ -65,7 +67,7 @@ Item {
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 10
+                anchors.margins: 12
                 spacing: Tokens.spacing.small
 
                 // Header with "Scan" button
@@ -132,6 +134,7 @@ Item {
                 // Filter chips with Flow (Wraps neatly across lines, never overflows!)
                 Flow {
                     Layout.fillWidth: true
+                    width: parent ? parent.width : 296
                     spacing: 4
 
                     Repeater {
@@ -353,9 +356,12 @@ Item {
                         }
                     }
 
-                    // Navigation Actions (Compact and right-aligned)
+                    // Navigation Actions (Compact and right-aligned, fixed min width to prevent clipping)
                     RowLayout {
+                        id: navActionRow
                         Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                        Layout.preferredWidth: implicitWidth
+                        Layout.minimumWidth: implicitWidth
                         Layout.fillWidth: false
                         spacing: 4
 
@@ -430,7 +436,8 @@ Item {
                     // Card 1: Remote Sync Status
                     StyledRect {
                         Layout.fillWidth: true
-                        Layout.preferredWidth: 0
+                        Layout.preferredWidth: 1
+                        Layout.minimumWidth: 100
                         implicitHeight: 92
                         radius: Tokens.rounding.medium
                         color: Colours.tPalette.m3surfaceContainer
@@ -508,7 +515,8 @@ Item {
                     // Card 2: Working Tree Status
                     StyledRect {
                         Layout.fillWidth: true
-                        Layout.preferredWidth: 0
+                        Layout.preferredWidth: 1
+                        Layout.minimumWidth: 100
                         implicitHeight: 92
                         radius: Tokens.rounding.medium
                         color: Colours.tPalette.m3surfaceContainer
@@ -556,7 +564,8 @@ Item {
                     // Card 3: Latest Commit Info
                     StyledRect {
                         Layout.fillWidth: true
-                        Layout.preferredWidth: 0
+                        Layout.preferredWidth: 1
+                        Layout.minimumWidth: 100
                         implicitHeight: 92
                         radius: Tokens.rounding.medium
                         color: Colours.tPalette.m3surfaceContainer
