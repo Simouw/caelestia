@@ -41,7 +41,25 @@ Singleton {
 
     readonly property bool loading: currentRequest !== null || requestQueue.length > 0
     readonly property var allRepos: snapshot ? ((snapshot.repos || []).concat(snapshot.localOnly || [])) : []
-    readonly property var stats: snapshot && snapshot.stats ? snapshot.stats : ({})
+    readonly property var stats: {
+        const s = (snapshot && snapshot.stats) ? snapshot.stats : ({});
+        const total = s.total || 0;
+        const dirty = s.dirty || 0;
+        const ahead = s.ahead || 0;
+        const behind = s.behind || 0;
+        const missing = s.missing || 0;
+        const synced = Math.max(0, total - dirty - ahead - behind - missing);
+        return {
+            total: total,
+            local: s.local || 0,
+            missing: missing,
+            dirty: dirty,
+            ahead: ahead,
+            behind: behind,
+            synced: synced,
+            localOnly: s.localOnly || 0
+        };
+    }
     readonly property var auth: snapshot && snapshot.auth ? snapshot.auth : ({})
     readonly property int tabIndex: {
         const mon = Hypr.focusedMonitor;
@@ -65,6 +83,9 @@ Singleton {
         switch (filter) {
         case "local":
             list = list.filter(r => !!r.localPath);
+            break;
+        case "synced":
+            list = list.filter(r => r.state === "synced");
             break;
         case "missing":
             list = list.filter(r => !r.localPath);
@@ -513,6 +534,13 @@ Singleton {
         if (!repo || !repo.localPath)
             return;
         request("open", { target: repo.localPath });
+    }
+
+    function openTerminal() {
+        const repo = root.selected;
+        if (!repo || !repo.localPath)
+            return;
+        Quickshell.execDetached(["foot", "--working-directory", repo.localPath]);
     }
 
     function openFile(file) {
