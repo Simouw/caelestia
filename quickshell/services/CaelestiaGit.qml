@@ -136,6 +136,8 @@ Singleton {
     }
 
     // ---- helpers ---------------------------------------------------------
+    property bool scanning: false
+
     function notify(text, kind) {
         root.toastText = text;
         root.toastKind = kind || "info";
@@ -145,11 +147,8 @@ Singleton {
 
     function ensureFresh() {
         if (!root.snapshot) {
-            root.refresh();
-            return;
+            root.loadSnapshot();
         }
-        if (Date.now() - (root.snapshot.at || 0) > 60000)
-            root.refresh();
     }
 
     function openDashboard() {
@@ -242,28 +241,78 @@ Singleton {
     }
 
     // ---- snapshot --------------------------------------------------------
-    function refresh() {
-        request("refresh", {}, data => {
+    function loadSnapshot() {
+        request("snapshot", {}, data => {
             const all = (data.repos || []).concat(data.localOnly || []);
             root.snapshot = data;
-            if (root.selectedFullName && !all.some(r => String(r.id || r.fullName) === root.selectedFullName)) {
+            if (root.selectedFullName && !all.some(r => String(r.id || r.fullName || r.localPath) === root.selectedFullName)) {
                 root.clearSelection();
+            } else if (!root.selectedFullName && all.length > 0) {
+                root.selectRepo(all[0]);
             } else {
-                const current = all.find(r => String(r.id || r.fullName) === root.selectedFullName);
+                const current = all.find(r => String(r.id || r.fullName || r.localPath) === root.selectedFullName);
                 if (current && current.localPath && !root.detail)
                     root.loadDetail();
             }
-            if (root.pendingSelectPath) {
-                const created = all.find(r => r.localPath === root.pendingSelectPath);
-                root.pendingSelectPath = "";
-                if (created)
-                    root.selectRepo(created);
-                else if (!root.selectedFullName && all.length > 0)
-                    root.selectRepo(all[0]);
-            } else if (!root.selectedFullName && all.length > 0) {
+        });
+    }
+
+    function scanPc() {
+        if (root.scanning || root.actionBusy)
+            return;
+        root.scanning = true;
+        root.actionBusy = true;
+        root.actionLabel = "Scan des dossiers du PC…";
+
+        const prevKeys = {};
+        for (let i = 0; i < root.allRepos.length; i++) {
+            const r = root.allRepos[i];
+            const k = r.localPath || r.fullName || r.name;
+            if (k)
+                prevKeys[k] = true;
+        }
+
+        request("refresh", {}, data => {
+            root.scanning = false;
+            root.actionBusy = false;
+            root.actionLabel = "";
+
+            const all = (data.repos || []).concat(data.localOnly || []);
+            root.snapshot = data;
+
+            let newlyFound = 0;
+            let firstNew = null;
+            for (let j = 0; j < all.length; j++) {
+                const item = all[j];
+                const key = item.localPath || item.fullName || item.name;
+                if (key && !prevKeys[key]) {
+                    newlyFound++;
+                    if (!firstNew)
+                        firstNew = item;
+                }
+            }
+
+            if (newlyFound > 0) {
+                root.notify(newlyFound + " nouveau(x) dépôt(s) Git trouvé(s) et ajouté(s) !", "ok");
+                if (firstNew)
+                    root.selectRepo(firstNew);
+            } else {
+                root.notify("Scan terminé : " + all.length + " dépôts vérifiés.", "info");
+            }
+
+            if (!root.selected && all.length > 0) {
                 root.selectRepo(all[0]);
             }
+        }, err => {
+            root.scanning = false;
+            root.actionBusy = false;
+            root.actionLabel = "";
+            root.notify("Erreur de scan : " + (err || "inconnue"), "bad");
         });
+    }
+
+    function refresh() {
+        root.scanPc();
     }
 
     function selectFirst() {

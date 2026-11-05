@@ -29,8 +29,8 @@ StyledRect {
         }
     }
 
-    implicitWidth: row.implicitWidth + Tokens.padding.medium * 2
-    implicitHeight: row.implicitHeight + Tokens.padding.extraSmall * 2
+    implicitWidth: row.implicitWidth + Tokens.padding.small * 2
+    implicitHeight: 22
 
     radius: Tokens.rounding.full
     color: palette.bg

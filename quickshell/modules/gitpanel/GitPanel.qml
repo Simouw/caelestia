@@ -13,8 +13,10 @@ Item {
 
     required property ScreenState screenState
 
-    implicitWidth: Math.min(1060, (Quickshell.screens.length ? Quickshell.screens[0].width : 1920) - 100)
-    implicitHeight: Math.min(640, (Quickshell.screens.length ? Quickshell.screens[0].height : 1080) - 180)
+    implicitWidth: Math.min(1040, (Quickshell.screens.length ? Quickshell.screens[0].width : 1920) - 80)
+    implicitHeight: Math.min(620, (Quickshell.screens.length ? Quickshell.screens[0].height : 1080) - 160)
+    width: implicitWidth
+    height: implicitHeight
 
     readonly property var repo: CaelestiaGit.selected
     readonly property bool hasLocal: !!repo && !!repo.localPath
@@ -50,27 +52,29 @@ Item {
         spacing: Tokens.spacing.medium
 
         // =====================================================================
-        //  LEFT COLUMN: Repositories List & Filters
+        //  LEFT COLUMN: Repositories List & Manual Scanner
         // =====================================================================
         StyledRect {
-            Layout.preferredWidth: 350
+            Layout.preferredWidth: 340
             Layout.fillHeight: true
             radius: Tokens.rounding.large
             color: Colours.tPalette.m3surfaceContainerLow
+            clip: true
 
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: Tokens.padding.medium
                 spacing: Tokens.spacing.small
 
-                // Header
+                // Header with "Scanner le PC" button
                 RowLayout {
                     Layout.fillWidth: true
+                    spacing: Tokens.spacing.small
 
                     MaterialIcon {
                         text: "account_tree"
                         color: Colours.tPalette.m3primary
-                        fontStyle: Tokens.font.icon.medium
+                        fontStyle: Tokens.font.icon.small
                     }
 
                     StyledText {
@@ -81,12 +85,45 @@ Item {
 
                     Item { Layout.fillWidth: true }
 
-                    IconButton {
-                        icon: "refresh"
-                        type: IconButton.Text
-                        padding: Tokens.padding.small
-                        enabled: !CaelestiaGit.actionBusy
-                        onClicked: CaelestiaGit.refresh()
+                    // Explicit Scan Button (Only scans when clicked by user)
+                    StyledRect {
+                        implicitHeight: 30
+                        implicitWidth: scanBtnRow.implicitWidth + Tokens.padding.small * 2
+                        radius: Tokens.rounding.full
+                        color: CaelestiaGit.scanning ? Colours.palette.m3tertiaryContainer : Colours.palette.m3primaryContainer
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            enabled: !CaelestiaGit.scanning && !CaelestiaGit.actionBusy
+                            onClicked: CaelestiaGit.scanPc()
+                        }
+
+                        RowLayout {
+                            id: scanBtnRow
+                            anchors.centerIn: parent
+                            spacing: 4
+
+                            MaterialIcon {
+                                text: CaelestiaGit.scanning ? "sync" : "travel_explore"
+                                color: CaelestiaGit.scanning ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onPrimaryContainer
+                                fontStyle: Tokens.font.icon.small
+
+                                RotationAnimation on rotation {
+                                    running: CaelestiaGit.scanning
+                                    from: 0
+                                    to: 360
+                                    loops: Animation.Infinite
+                                    duration: 1000
+                                }
+                            }
+
+                            StyledText {
+                                text: CaelestiaGit.scanning ? "Scan…" : "Scanner"
+                                font: Tokens.font.label.small
+                                color: CaelestiaGit.scanning ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onPrimaryContainer
+                            }
+                        }
                     }
                 }
 
@@ -102,7 +139,7 @@ Item {
                             required property var modelData
 
                             readonly property bool active: CaelestiaGit.filter === modelData.id
-                            implicitHeight: 28
+                            implicitHeight: 26
                             implicitWidth: chipRow.implicitWidth + Tokens.padding.small * 2
                             radius: Tokens.rounding.full
                             color: active ? Colours.palette.m3primary : (cArea.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : Colours.tPalette.m3surfaceContainer)
@@ -139,7 +176,7 @@ Item {
                 // Search Bar
                 StyledRect {
                     Layout.fillWidth: true
-                    implicitHeight: 36
+                    implicitHeight: 34
                     radius: Tokens.rounding.medium
                     color: Colours.tPalette.m3surfaceContainer
 
@@ -183,16 +220,19 @@ Item {
                     model: CaelestiaGit.filteredRepos
 
                     delegate: RepoRow {
-                        modelData: modelData
-                        selected: !!root.repo && !!modelData && (root.repo.id === modelData.id || root.repo.name === modelData.name)
+                        required property var modelData
+                        width: repoList.width
+                        repo: modelData
+                        selected: !!root.repo && (root.repo.id === modelData.id || root.repo.name === modelData.name || (root.repo.localPath && root.repo.localPath === modelData.localPath))
                         onActivated: CaelestiaGit.selectRepo(modelData)
                     }
 
                     StyledText {
                         anchors.centerIn: parent
                         visible: repoList.count === 0
-                        text: "No repositories found"
+                        text: "No repositories found\nClick 'Scanner' to search PC"
                         color: Colours.palette.m3outline
+                        horizontalAlignment: Text.AlignHCenter
                     }
                 }
             }
@@ -206,6 +246,7 @@ Item {
             Layout.fillHeight: true
             radius: Tokens.rounding.large
             color: Colours.tPalette.m3surfaceContainerLow
+            clip: true
 
             // Empty state
             Item {
@@ -252,7 +293,7 @@ Item {
                             spacing: Tokens.spacing.small
 
                             StyledText {
-                                text: root.repo ? root.repo.name : ""
+                                text: root.repo ? (root.repo.name || root.repo.fullName || "") : ""
                                 font: Tokens.font.title.medium
                                 color: Colours.tPalette.m3onSurface
                             }
@@ -284,7 +325,7 @@ Item {
                             }
 
                             StateChip {
-                                state: root.repo ? root.repo.state : "unknown"
+                                state: root.repo && root.repo.state ? root.repo.state : "synced"
                             }
                         }
 
@@ -293,7 +334,7 @@ Item {
                             spacing: Tokens.spacing.small
 
                             StyledText {
-                                text: root.repo ? (root.repo.localPath || root.repo.fullName) : ""
+                                text: root.repo ? (root.repo.localPath || root.repo.fullName || "") : ""
                                 color: Colours.palette.m3onSurfaceVariant
                                 font: Tokens.font.mono.small
                                 elide: Text.ElideMiddle

@@ -9,17 +9,17 @@ import qs.services
 Item {
     id: root
 
-    required property var modelData
-    property var repo: modelData
+    required property var repo
     property bool selected: false
-    signal activated
+    signal activated()
 
     readonly property var local: repo ? repo.local : null
-    readonly property bool isMissing: !!repo && !repo.localPath
+    readonly property bool isMissing: !repo || !repo.localPath
 
+    implicitWidth: 320
+    implicitHeight: 54
     width: ListView.view ? ListView.view.width : implicitWidth
-    implicitWidth: 340
-    implicitHeight: 58
+    clip: true
 
     StyledRect {
         anchors.fill: parent
@@ -49,7 +49,7 @@ Item {
 
             MaterialIcon {
                 anchors.centerIn: parent
-                text: root.isMissing ? "cloud_off" : (root.repo && root.repo.external ? "account_tree" : "folder")
+                text: root.isMissing ? "cloud_off" : "folder"
                 color: root.selected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurfaceVariant
                 fontStyle: Tokens.font.icon.small
             }
@@ -58,7 +58,7 @@ Item {
         ColumnLayout {
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignVCenter
-            spacing: 1
+            spacing: 2
 
             RowLayout {
                 Layout.fillWidth: true
@@ -66,14 +66,14 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: root.repo ? (root.repo.name || "") : ""
+                    text: root.repo ? (root.repo.name || root.repo.fullName || "Unnamed Repo") : ""
                     color: Colours.palette.m3onSurface
                     font: Tokens.font.body.small
                     elide: Text.ElideRight
                 }
 
                 StateChip {
-                    state: root.repo && root.repo.state ? root.repo.state : "missing"
+                    state: root.repo && root.repo.state ? root.repo.state : (root.isMissing ? "missing" : "synced")
                 }
             }
 
@@ -87,8 +87,8 @@ Item {
                         if (!root.repo)
                             return "";
                         const owner = root.repo.owner || "local";
-                        const branch = root.local && root.local.branch ? root.local.branch : (root.repo.defaultBranch || "");
-                        return owner + (branch ? " · " + branch : "");
+                        const branch = root.local && root.local.branch ? root.local.branch : (root.repo.defaultBranch || "main");
+                        return owner + " · " + branch;
                     }
                     color: Colours.palette.m3onSurfaceVariant
                     font: Tokens.font.label.small
@@ -104,7 +104,7 @@ Item {
                         const b = (root.local.behind || 0) > 0 ? "↓" + root.local.behind : "";
                         return (a + " " + b).trim();
                     }
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Colours.palette.m3tertiary
                     font: Tokens.font.mono.small
                 }
             }
