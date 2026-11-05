@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -e
+
+ACTION="${1:-toggle}"
+
+send_notification() {
+  local is_muted="$1"
+  if [ "$is_muted" = "true" ]; then
+    notify-send \
+      -h string:x-canonical-private-synchronous:mic-status \
+      -a "Système" \
+      -i microphone-sensitivity-muted \
+      -t 2000 \
+      "Microphone" "🔇 Coupé (MUTE)"
+    echo "🔇 Microphone coupé (MUTE)"
+  else
+    notify-send \
+      -h string:x-canonical-private-synchronous:mic-status \
+      -a "Système" \
+      -i audio-input-microphone \
+      -t 2000 \
+      "Microphone" "🎙️ Activé (UNMUTE)"
+    echo "🎙️ Microphone activé (UNMUTE)"
+  fi
+}
+
+case "$ACTION" in
+  toggle)
+    wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle
+    if wpctl get-volume @DEFAULT_AUDIO_SOURCE@ | grep -q "\[MUTED\]"; then
+      send_notification "true"
+    else
+      send_notification "false"
+    fi
+    ;;
+
+  mute)
+    wpctl set-mute @DEFAULT_AUDIO_SOURCE@ 1
+    send_notification "true"
+    ;;
+
+  unmute)
+    wpctl set-mute @DEFAULT_AUDIO_SOURCE@ 0
+    send_notification "false"
+    ;;
+
+  status)
+    if wpctl get-volume @DEFAULT_AUDIO_SOURCE@ | grep -q "\[MUTED\]"; then
+      echo "🔇 Statut : Microphone COUPÉ (MUTED)"
+    else
+      echo "🎙️ Statut : Microphone ACTIF"
+    fi
+    ;;
+
+  *)
+    echo "Usage: mic [toggle|mute|unmute|status]"
+    echo "Sans argument, bascule (toggle) entre coupé et actif."
+    exit 1
+    ;;
+esac

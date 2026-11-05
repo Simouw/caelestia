@@ -92,7 +92,7 @@ dest = "$XDG_CONFIG_HOME/starship.toml"
 
 [[components]]
 name = "firefox"
-default = true
+default = false
 packages = ["firefox", "local:packages/caelestia-firefox-theme"]
 post_package = ["bash $CAELESTIA_DOTS/firefox/init_firefox.sh"]
 [[components.entries]]
@@ -101,6 +101,25 @@ dest = "$HOME/.mozilla/firefox/*.default*/chrome/userChrome.css"
 [[components.entries]]
 src = "firefox/user.js"
 dest = "$HOME/.mozilla/firefox/*.default*/user.js"
+
+[[components]]
+name = "helium"
+default = true
+packages = ["helium-browser"]
+
+[[components]]
+name = "caelestia-config"
+default = true
+[[components.entries]]
+src = "caelestia"
+dest = "$XDG_CONFIG_HOME/caelestia"
+
+[[components]]
+name = "scripts"
+default = true
+[[components.entries]]
+src = "bin"
+dest = "$HOME/.local/bin"
 
 [[components]]
 name = "gtk"
@@ -228,13 +247,11 @@ dest = "$XDG_CONFIG_HOME/zed"
 
 [[components]]
 name = "nvim"
+default = true
 packages = ["neovim"]
 [[components.entries]]
-src = "nvim/colors/caelestia.lua"
-dest = "$XDG_CONFIG_HOME/nvim/colors/caelestia.lua"
-[[components.entries]]
-src = "nvim/lua/plugins/caelestia.lua"
-dest = "$XDG_CONFIG_HOME/nvim/lua/plugins/caelestia.lua"
+src = "nvim"
+dest = "$XDG_CONFIG_HOME/nvim"
 
 [[components]]
 name = "discord"

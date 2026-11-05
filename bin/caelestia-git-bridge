@@ -1,0 +1,59 @@
+#!/usr/bin/env node
+'use strict'
+
+// Caelestia Git Panel -> cmoGit bridge.
+// The panel only knows this bridge; cmoGit exposes a generic `cmogit api` command.
+//
+// Usage: caelestia-git-bridge <method> [json]
+// Env:   CMOGIT_BIN  path or command for the cmoGit CLI (default: cmogit)
+
+const { spawnSync } = require('node:child_process')
+const path = require('node:path')
+const fs = require('node:fs')
+
+const method = process.argv[2] || 'snapshot'
+const payload = process.argv[3] || '{}'
+
+function fail(message) {
+  process.stdout.write(JSON.stringify({
+    ok: false,
+    error: { message, code: 'BRIDGE_ERROR' }
+  }) + '\n')
+}
+
+let command = process.env.CMOGIT_BIN || 'cmogit'
+let args
+
+if (/\.(c?js)$/i.test(command)) {
+  const script = path.resolve(command)
+  if (!fs.existsSync(script)) {
+    fail(`cmoGit CLI not found at ${script}. Install cmoGit or set CMOGIT_BIN.`)
+    process.exit(0)
+  }
+  command = process.execPath
+  args = [script, 'api', method, payload]
+} else {
+  args = ['api', method, payload]
+}
+
+const result = spawnSync(command, args, {
+  encoding: 'utf8',
+  timeout: 120000,
+  windowsHide: true,
+  shell: process.platform === 'win32',
+})
+
+if (result.error) {
+  fail(result.error.code === 'ENOENT'
+    ? 'cmoGit CLI not found. Install cmoGit, add it to PATH, or set CMOGIT_BIN.'
+    : `cmoGit bridge failed: ${result.error.message}`)
+  process.exit(0)
+}
+
+if (result.stdout && result.stdout.trim()) {
+  process.stdout.write(result.stdout)
+} else {
+  const detail = (result.stderr || '').trim()
+  fail(detail || 'Empty response from cmoGit.')
+}
+process.exit(0)

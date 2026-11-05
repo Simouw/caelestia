@@ -7,8 +7,8 @@ return {
 
     -- Apps
     terminal                   = "foot",
-    browser                    = "firefox",
-    editor                     = "codium",
+    browser                    = "helium-browser",
+    editor                     = "foot -e nvim",
     fileExplorer               = "thunar",
     audioSettings              = "pwvucontrol",
 
@@ -141,6 +141,7 @@ return {
     kbShowSidebar              = "SUPER + N",
     kbClearNotifs              = "CTRL + ALT + C",
     kbShowPanels               = "SUPER + K",
+    kbGitPanel                   = "SUPER + G",
     kbLock                     = "SUPER + L",
     kbRestoreLock              = "SUPER + ALT + L",
     kbSleep                    = "SUPER + SHIFT + L",
