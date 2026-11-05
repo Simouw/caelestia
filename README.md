@@ -120,14 +120,23 @@ The script will:
 
 ## 🙏 Credits & Acknowledgements
 
-This setup stands on the shoulders of fantastic open-source projects. Heartfelt thanks to all the respective authors:
+This setup stands on the shoulders of fantastic open-source projects. Heartfelt thanks to all the respective authors for their incredible work:
 
-* **[Caelestia](https://github.com/caelestia-dots/caelestia)** & **[Caelestia Shell](https://github.com/caelestia-dots/shell)** — Created by the **caelestia-dots** team. The gorgeous Material You / morphing Wayland desktop shell that forms the foundation of this setup.
-* **[Caelestia Notes](https://github.com/Denzils-repo/Caelestia_Notes)** — Created by **[Denzil](https://github.com/Denzils-repo)**. The lightweight Markdown note renderer, repeating daily habits, streak tracking, and to-do dashboard tab for Caelestia Quickshell.
-* **[Caelestia Git Panel](https://github.com/Simouw/caelestia-git)** — Native Git panel for the Caelestia dashboard by **[Simouw](https://github.com/Simouw)**.
-* **[GitXplorer (GitX)](https://github.com/Simouw/GitX)** — Desktop Git application and backend automation CLI (`cmogit`) by **[Simouw](https://github.com/Simouw)**.
-* **[LazyVim](https://github.com/LazyVim/LazyVim)** — Created by **[Folke](https://github.com/folke)**. The modern, blazing-fast Neovim setup.
-* **[Helium Browser](https://github.com/helium-browser)** — Modern web browser.
+* **[Caelestia](https://github.com/caelestia-dots/caelestia)** & **[Caelestia Shell](https://github.com/caelestia-dots/shell)** — Created by the **[caelestia-dots](https://github.com/caelestia-dots)** team. The gorgeous Material You / morphing Wayland desktop shell that forms the complete foundation of this setup.
+* **[Caelestia Notes](https://github.com/Denzils-repo/Caelestia_Notes)** — Created entirely by **[Denzil](https://github.com/Denzils-repo)** (`@Denzils-repo`). The lightweight Markdown note renderer, repeating daily habits, streak tracking, to-do list, and topbar widget for Caelestia Quickshell. Integrated into this rice with full attribution.
+* **[Helium Browser](https://github.com/imputnet/helium)** — Created by the **[Imputnet](https://github.com/imputnet)** team. Minimalist, fast, and privacy-first web browser used as the default browser (`Super + W`).
+* **[LazyVim](https://github.com/LazyVim/LazyVim)** — Created by **[Folke Lemaitre](https://github.com/folke)** (`@folke`). The modern, blazing-fast Neovim distribution powering our editor configuration.
+* **[Base2Tone Colorschemes](https://github.com/atelierbram/Base2Tone)** — Created by **[Bram de Haan](https://github.com/atelierbram)** (`@atelierbram`). Elegant duotone syntax highlighting themes.
+* **[Hyprland](https://github.com/hyprwm/Hyprland)** — Created by **[Vaxry](https://github.com/vaxerski)** and the **hyprwm** team. The dynamic tiling Wayland compositor.
+* **[Quickshell](https://github.com/outfoxxed/quickshell)** — Created by **[Outfoxxed](https://github.com/outfoxxed)**. The flexible Qt Quick desktop shell framework powering Caelestia.
+* **AI Tooling & CLIs**:
+  * **[OpenCode](https://github.com/opencode-ai)** — Autonomous AI coding CLI.
+  * **[Codex](https://github.com/openai)** — OpenAI Codex command-line interface.
+  * **[Antigravity (`agy`)](https://github.com/google-deepmind)** — Agentic AI coding assistant by Google DeepMind.
+* **Personal Additions by [Simouw](https://github.com/Simouw)**:
+  * **[Caelestia Git Panel](https://github.com/Simouw/caelestia-git)** — 100% standalone, zero-dependency Git status dashboard for the Caelestia shell.
+  * **[GitXplorer (GitX)](https://github.com/Simouw/GitX)** — Companion desktop Git visualizer and manager.
+  * Right-edge AI slide launcher, topbar timer widget, AZERTY/QWERTY layout switcher, unified installer, wallpaper gallery, and Neovim customizations.
 
 ---
 
