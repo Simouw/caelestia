@@ -12,10 +12,13 @@ Unlike default Caelestia setups configured around VSCode/Codium and Firefox/Zen,
 
 * **Default Browser** : **Helium Browser** (`helium-browser`), mapped to `Super + W`.
 * **Default Editor** : **Neovim** in Foot terminal (`foot -e nvim`), mapped to `Super + C` (powered by LazyVim with full French typing/correction aids and custom themes).
-* **Terminal** : **Foot** (customized Caelestia styling).
-* **Keyboard Layout** : **AZERTY** (`fr`) with direct 1–10 workspace switching on physical keys (`&`, `é`, `"`, `'`, `(`, `-`, `è`, `_`, `ç`, `à`).
+* **AI CLI Launchers** : **Right-Edge Slide Tab** (located at the top third of the right border). Hover or click to reveal instant one-click floating terminals for **OpenCode**, **Antigravity (`agy`)**, **Codex**, and **Claude**.
+* **AI Tooling by Default** : Auto-installs **OpenCode CLI**, **OpenAI Codex CLI**, and **Antigravity CLI** (`agy`).
+* **Terminal** : **Foot** (customized Caelestia styling with centered floating rules for AI sessions).
+* **Keyboard Layout Switcher** : **AZERTY (`fr`) & QWERTY (`us`)** support. Click the keyboard indicator at the bottom of the Caelestia sidebar (`Super + N`) to switch instantaneously between French and US layouts.
+* **Top Bar Timer & Pomodoro** : Integrated timer widget in the top bar. Click to select 5m, 15m, 25m (Pomodoro), or 50m presets, with live countdown and audio/OSD completion alert.
+* **Streamlined Git Status Glance** : Lightweight, zero-lag **Caelestia Git** tab inside the Dashboard (`Super + G` or `Super + K` → Git) showing clean working tree overview, branch sync status, changed files, and a one-click *"Open in GitX"* button.
 * **Integrated Notes & Todos** : Native **Caelestia Notes** tab inside the Quickshell Dashboard (`Super + K` → Notes).
-* **Integrated Git Panel** : Native **Caelestia Git** tab inside the Quickshell Dashboard (`Super + G` or `Super + K` → Git) powered by `cmogit` / `caelestia-git-bridge`.
 * **Visual Wallpaper Gallery** : Interactive 3x3 wallpaper preview and switcher (`Super + Shift + W`), plus instant random wallpaper toggle (`Super + Alt + W`).
 * **Microphone Mute Toggle** : Global mute toggle with OSD notifications (`Super + Alt + M`).
 * **Keyboard Cheatsheet** : Instant fuzzy shortcut cheatsheet (`Super + /` or `Super + H`).

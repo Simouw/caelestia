@@ -3,7 +3,12 @@ set -euo pipefail
 
 # ==============================================================================
 #  Caelestia Quickshell Add-ons Installer
-#  Installs Caelestia Notes & Caelestia Git Panel into Quickshell.
+#  Installs:
+#  - Caelestia Notes & Todos
+#  - Streamlined Caelestia Git Panel (Status Overview)
+#  - Top Bar Timer / Reminder widget (Pomodoro & presets)
+#  - Sidebar Keyboard Layout Switcher (FR / US)
+#  - Right-edge AI Terminal Slide Tab (OpenCode, Antigravity, Codex, Claude)
 # ==============================================================================
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -23,12 +28,17 @@ echo "[+] Copying QML modules & services..."
 mkdir -p "$QS_CONFIG/modules/bar/components" \
          "$QS_CONFIG/modules/dashboard/notes" \
          "$QS_CONFIG/modules/gitpanel" \
+         "$QS_CONFIG/modules/sidebar" \
+         "$QS_CONFIG/modules/aitab" \
          "$QS_CONFIG/services"
 
 cp -r "$ROOT/modules/gitpanel/"* "$QS_CONFIG/modules/gitpanel/"
 cp "$ROOT/modules/dashboard/NotesTab.qml" "$QS_CONFIG/modules/dashboard/NotesTab.qml"
 cp -r "$ROOT/modules/dashboard/notes/"* "$QS_CONFIG/modules/dashboard/notes/"
 cp "$ROOT/modules/bar/components/NotesButton.qml" "$QS_CONFIG/modules/bar/components/NotesButton.qml"
+cp "$ROOT/modules/bar/components/TimerButton.qml" "$QS_CONFIG/modules/bar/components/TimerButton.qml"
+cp "$ROOT/modules/sidebar/Content.qml" "$QS_CONFIG/modules/sidebar/Content.qml"
+cp "$ROOT/modules/aitab/AiSlideTab.qml" "$QS_CONFIG/modules/aitab/AiSlideTab.qml"
 cp "$ROOT/services/CaelestiaGit.qml" "$QS_CONFIG/services/CaelestiaGit.qml"
 cp "$ROOT/services/NotesStore.qml" "$QS_CONFIG/services/NotesStore.qml"
 
@@ -54,6 +64,23 @@ def edit_file(path: pathlib.Path, old: str, new: str, marker: str, label: str):
     path.write_text(text, encoding="utf-8")
     print(f"  [+] Patched: {label}")
 
+# --- shell.qml ---
+shell = qs / "shell.qml"
+if shell.exists():
+    text = shell.read_text(encoding="utf-8")
+    if 'import "modules/aitab"' not in text:
+        edit_file(shell,
+                  'import "modules/lock"\n',
+                  'import "modules/lock"\nimport "modules/aitab"\n',
+                  'import "modules/aitab"',
+                  "shell.qml aitab import")
+    if "AiSlideTab {}" not in text:
+        edit_file(shell,
+                  "    Lock {\n        id: lock\n    }\n",
+                  "    Lock {\n        id: lock\n    }\n\n    AiSlideTab {}\n",
+                  "AiSlideTab {}",
+                  "shell.qml AiSlideTab component")
+
 # --- modules/dashboard/Content.qml ---
 content = qs / "modules/dashboard/Content.qml"
 if content.exists():
@@ -65,7 +92,6 @@ if content.exists():
                   "import qs.modules.gitpanel",
                   "Content.qml gitpanel import")
 
-    # Add Notes & Git tabs to dashboard tabs array
     if "notesComponent" not in text:
         edit_file(content,
                   """            {
@@ -114,7 +140,6 @@ if content.exists():
                   "gitPanelComponent",
                   "Content.qml Git tab entry")
 
-    # Add Component definitions
     if "NotesTab {}" not in text:
         edit_file(content,
                   """            Component {
@@ -161,10 +186,9 @@ if content.exists():
 bar = qs / "modules/bar/Bar.qml"
 if bar.exists():
     text = bar.read_text(encoding="utf-8")
-    if 'id === "notes"' not in text:
+    if 'id === "timer"' not in text:
         edit_file(bar,
-                  "values: root.Config.bar.entries.values.filter(e => e.enabled)",
-                  """values: {
+                  """            values: {
                 const entries = root.Config.bar.entries.values.filter(e => e.enabled);
                 if (!entries.some(e => e.id === "notes")) {
                     const statusIdx = entries.findIndex(e => e.id === "statusIcons");
@@ -177,33 +201,62 @@ if bar.exists():
                 }
                 return entries;
             }""",
-                  'id === "notes"',
-                  "Bar.qml notes entry injection")
+                  """            values: {
+                let res = root.Config.bar.entries.values.filter(e => e.enabled);
+                if (!res.some(e => e.id === "notes")) {
+                    const statusIdx = res.findIndex(e => e.id === "statusIcons");
+                    const insertIdx = statusIdx >= 0 ? statusIdx : Math.max(0, res.length - 1);
+                    res = [
+                        ...res.slice(0, insertIdx),
+                        { id: "notes", enabled: true },
+                        ...res.slice(insertIdx)
+                    ];
+                }
+                if (!res.some(e => e.id === "timer")) {
+                    const statusIdx = res.findIndex(e => e.id === "statusIcons");
+                    const insertIdx = statusIdx >= 0 ? statusIdx : Math.max(0, res.length - 1);
+                    res = [
+                        ...res.slice(0, insertIdx),
+                        { id: "timer", enabled: true },
+                        ...res.slice(insertIdx)
+                    ];
+                }
+                return res;
+            }""",
+                  'id === "timer"',
+                  "Bar.qml timer entry injection")
 
-    if "NotesButton {}" not in text:
+    if "TimerButton {}" not in text:
         edit_file(bar,
-                  """                delegate: EntryWrapper {
-                    Clock {
-                        objectName: "taskbarClock"
+                  """            DelegateChoice {
+                roleValue: "notes"
+                delegate: EntryWrapper {
+                    NotesButton {
+                        objectName: "taskbarNotesButton"
+                        screenState: root.screenState
                     }
                 }
             }""",
-                  """                delegate: EntryWrapper {
-                    Clock {
-                        objectName: "taskbarClock"
+                  """            DelegateChoice {
+                roleValue: "notes"
+                delegate: EntryWrapper {
+                    NotesButton {
+                        objectName: "taskbarNotesButton"
+                        screenState: root.screenState
                     }
                 }
             }
-
             DelegateChoice {
-                roleValue: "notes"
-
+                roleValue: "timer"
                 delegate: EntryWrapper {
-                    NotesButton {}
+                    TimerButton {
+                        objectName: "taskbarTimerButton"
+                        screenState: root.screenState
+                    }
                 }
             }""",
-                  "NotesButton {}",
-                  "Bar.qml NotesButton delegate")
+                  "TimerButton {}",
+                  "Bar.qml TimerButton delegate")
 
 # --- modules/drawers/ContentWindow.qml ---
 window = qs / "modules/drawers/ContentWindow.qml"
@@ -272,4 +325,4 @@ if shortcuts.exists():
 
 PY
 
-echo "[+] Quickshell add-ons successfully installed!"
+echo "[+] Quickshell add-ons successfully installed and updated!"

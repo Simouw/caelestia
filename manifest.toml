@@ -176,6 +176,11 @@ default = true
 packages = ["noto-fonts", "noto-fonts-cjk", "noto-fonts-emoji"]
 
 [[components]]
+name = "ai-tools"
+default = true
+packages = ["opencode", "openai-codex-bin"]
+
+[[components]]
 name = "tools"
 default = true
 packages = [

@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -11,38 +13,24 @@ Item {
 
     required property ScreenState screenState
 
-    implicitWidth: Math.min(1080, (Quickshell.screens.length ? Quickshell.screens[0].width : 1920) - 120)
-    implicitHeight: Math.min(640, (Quickshell.screens.length ? Quickshell.screens[0].height : 1080) - 200)
+    implicitWidth: Math.min(1040, (Quickshell.screens.length ? Quickshell.screens[0].width : 1920) - 120)
+    implicitHeight: Math.min(620, (Quickshell.screens.length ? Quickshell.screens[0].height : 1080) - 200)
 
     readonly property var repo: CaelestiaGit.selected
     readonly property bool hasLocal: !!repo && !!repo.localPath
-    readonly property bool hasRemote: !!(CaelestiaGit.detail && CaelestiaGit.detail.remotes && CaelestiaGit.detail.remotes.length > 0)
     readonly property var status: CaelestiaGit.status
-    readonly property int changedCount: status && status.counts ? status.counts.changed : 0
-    readonly property var tabs: [
-        { label: "Changes", icon: "edit_note", badge: changedCount },
-        { label: "History", icon: "history", badge: 0 },
-        { label: "Branches", icon: "account_tree", badge: CaelestiaGit.branches.locals.length }
-    ]
+    readonly property var counts: status && status.counts ? status.counts : { changed: 0, staged: 0, unstaged: 0, untracked: 0 }
+
     readonly property var filters: [
         { id: "all", label: "All", count: CaelestiaGit.stats.total || 0 },
-        { id: "local", label: "Local", count: CaelestiaGit.stats.local || 0 },
         { id: "dirty", label: "Modified", count: CaelestiaGit.stats.dirty || 0 },
-        { id: "behind", label: "Behind", count: CaelestiaGit.stats.behind || 0 },
-        { id: "missing", label: "Not cloned", count: CaelestiaGit.stats.missing || 0 }
+        { id: "ahead", label: "Ahead", count: CaelestiaGit.stats.ahead || 0 },
+        { id: "behind", label: "Behind", count: CaelestiaGit.stats.behind || 0 }
     ]
 
     Component.onCompleted: {
         CaelestiaGit.ensureFresh();
         CaelestiaGit.selectFirst();
-    }
-
-    Connections {
-        target: CaelestiaGit
-
-        function onSnapshotChanged() {
-            CaelestiaGit.selectFirst();
-        }
     }
 
     Connections {
@@ -52,576 +40,464 @@ Item {
             if (root.screenState.dashboard && root.screenState.dashboardTab === CaelestiaGit.tabIndex) {
                 CaelestiaGit.ensureFresh();
                 CaelestiaGit.selectFirst();
-            } else if (!root.screenState.dashboard) {
-                CaelestiaGit.newRepoOpen = false;
-                CaelestiaGit.publishOpen = false;
-                CaelestiaGit.folderPickerOpen = false;
             }
         }
-    }
-
-    Component.onDestruction: {
-        CaelestiaGit.newRepoOpen = false;
-        CaelestiaGit.publishOpen = false;
-        CaelestiaGit.folderPickerOpen = false;
-    }
-
-    Shortcut {
-        sequence: "Escape"
-        enabled: root.screenState.dashboard && root.screenState.dashboardTab === CaelestiaGit.tabIndex
-        onActivated: root.screenState.dashboard = false
-    }
-
-    Shortcut {
-        sequence: "Ctrl+R"
-        enabled: root.screenState.dashboard && root.screenState.dashboardTab === CaelestiaGit.tabIndex
-        onActivated: CaelestiaGit.refresh()
     }
 
     RowLayout {
         anchors.fill: parent
         spacing: Tokens.spacing.medium
 
-        // ------------------------------------------------------------------
-        // Repository list
-        // ------------------------------------------------------------------
+        // =====================================================================
+        //  LEFT COLUMN: Repositories List & Filters
+        // =====================================================================
         StyledRect {
-            Layout.preferredWidth: Math.min(370, Math.max(280, root.width * 0.34))
+            Layout.preferredWidth: 340
             Layout.fillHeight: true
             radius: Tokens.rounding.large
             color: Colours.tPalette.m3surfaceContainerLow
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: Tokens.padding.large
-                spacing: Tokens.spacing.medium
+                anchors.margins: Tokens.padding.medium
+                spacing: Tokens.spacing.small
 
+                // Header
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: Tokens.spacing.small
 
-                    StyledRect {
-                        implicitWidth: 34
-                        implicitHeight: 34
-                        radius: Tokens.rounding.small
-                        color: Colours.palette.m3primaryContainer
-
-                        MaterialIcon {
-                            anchors.centerIn: parent
-                            text: "account_tree"
-                            color: Colours.palette.m3onPrimaryContainer
-                            fontStyle: Tokens.font.icon.medium
-                            fill: 1
-                        }
+                    MaterialIcon {
+                        text: "account_tree"
+                        color: Colours.tPalette.m3primary
                     }
 
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 0
-
-                        StyledText {
-                            text: "Caelestia Git"
-                            color: Colours.palette.m3onSurface
-                            font: Tokens.font.title.small
-                        }
-
-                        StyledText {
-                            text: CaelestiaGit.auth.login ? "GitHub · " + CaelestiaGit.auth.login : "GitHub not connected"
-                            color: Colours.palette.m3onSurfaceVariant
-                            font: Tokens.font.label.small
-                        }
+                    StyledText {
+                        text: "Repositories"
+                        font: Tokens.font.title.small
+                        color: Colours.tPalette.m3onSurface
                     }
 
-                    IconButton {
-                        icon: "add"
-                        type: IconButton.Text
-                        padding: Tokens.padding.small
-                        onClicked: CaelestiaGit.newRepoOpen = true
-                    }
+                    Item { Layout.fillWidth: true }
 
                     IconButton {
                         icon: "refresh"
                         type: IconButton.Text
                         padding: Tokens.padding.small
-                        enabled: !CaelestiaGit.loading
                         onClicked: CaelestiaGit.refresh()
                     }
-
-                    IconButton {
-                        icon: "open_in_new"
-                        type: IconButton.Text
-                        padding: Tokens.padding.small
-                        onClicked: CaelestiaGit.openFullApp()
-                    }
                 }
 
-                SearchBar {
-                    id: searchBar
-
+                // Filter chips
+                RowLayout {
                     Layout.fillWidth: true
-                    placeholderText: "Search repositories…"
-                    text: CaelestiaGit.search
-                    onTextEdited: CaelestiaGit.search = text
-                }
-
-                Flow {
-                    Layout.fillWidth: true
-                    spacing: Tokens.spacing.extraSmall
+                    spacing: 4
 
                     Repeater {
                         model: root.filters
 
-                        delegate: FilterChip {
-                            text: modelData.label
-                            count: modelData.count
-                            active: CaelestiaGit.filter === modelData.id
-                            onClicked: CaelestiaGit.filter = modelData.id
+                        delegate: StyledRect {
+                            required property var modelData
+
+                            readonly property bool active: CaelestiaGit.filter === modelData.id
+                            implicitHeight: 28
+                            implicitWidth: chipRow.implicitWidth + Tokens.padding.small * 2
+                            radius: Tokens.rounding.full
+                            color: active ? Colours.palette.m3primary : (cArea.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : Colours.tPalette.m3surfaceContainer)
+
+                            MouseArea {
+                                id: cArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: CaelestiaGit.filter = modelData.id
+                            }
+
+                            RowLayout {
+                                id: chipRow
+                                anchors.centerIn: parent
+                                spacing: 4
+
+                                StyledText {
+                                    text: modelData.label
+                                    color: active ? Colours.palette.m3onPrimary : Colours.palette.m3onSurfaceVariant
+                                    font: Tokens.font.label.small
+                                }
+
+                                StyledText {
+                                    text: String(modelData.count)
+                                    color: active ? Colours.palette.m3onPrimary : Colours.palette.m3outline
+                                    font: Tokens.font.label.small
+                                }
+                            }
                         }
                     }
                 }
 
+                // Search Bar
+                StyledRect {
+                    Layout.fillWidth: true
+                    implicitHeight: 36
+                    radius: Tokens.rounding.medium
+                    color: Colours.tPalette.m3surfaceContainer
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: Tokens.padding.small
+                        anchors.rightMargin: Tokens.padding.small
+                        spacing: Tokens.spacing.extraSmall
+
+                        MaterialIcon {
+                            text: "search"
+                            fontStyle: Tokens.font.icon.small
+                            color: Colours.tPalette.m3onSurfaceVariant
+                        }
+
+                        TextInput {
+                            id: searchInput
+                            Layout.fillWidth: true
+                            color: Colours.palette.m3onSurface
+                            font.pointSize: 10
+                            clip: true
+                            onTextChanged: CaelestiaGit.search = text
+
+                            Text {
+                                text: "Filter by name..."
+                                visible: !searchInput.text
+                                color: Colours.palette.m3outline
+                                font: searchInput.font
+                            }
+                        }
+                    }
+                }
+
+                // Repo List
                 ListView {
                     id: repoList
-
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     clip: true
                     spacing: 2
-                    model: CaelestiaGit.filteredRepos
+                    model: CaelestiaGit.filtered
 
                     delegate: RepoRow {
-                        width: repoList.width
-                        selected: String(modelData.id || modelData.fullName) === CaelestiaGit.selectedFullName
-                        onActivated: CaelestiaGit.selectRepo(modelData)
+                        modelData: modelData
+                        selected: !!root.repo && root.repo.name === modelData.name
+                        onActivated: CaelestiaGit.select(modelData)
                     }
-                }
-
-                StyledText {
-                    Layout.fillWidth: true
-                    visible: CaelestiaGit.filteredRepos.length === 0 && !CaelestiaGit.loading
-                    text: "No matching repositories."
-                    color: Colours.palette.m3onSurfaceVariant
-                    font: Tokens.font.body.small
-                    horizontalAlignment: Text.AlignHCenter
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
 
                     StyledText {
-                        Layout.fillWidth: true
-                        text: (CaelestiaGit.stats.total || 0) + " repos · " + (CaelestiaGit.stats.local || 0) + " local"
-                        color: Colours.palette.m3onSurfaceVariant
-                        font: Tokens.font.label.small
-                    }
-
-                    MiniButton {
-                        visible: (CaelestiaGit.stats.missing || 0) > 0
-                        compact: true
-                        icon: "cloud_download"
-                        text: "Clone " + (CaelestiaGit.stats.missing || 0)
-                        enabled: !CaelestiaGit.actionBusy
-                        onClicked: CaelestiaGit.cloneMissing()
+                        anchors.centerIn: parent
+                        visible: repoList.count === 0
+                        text: "No repositories found"
+                        color: Colours.palette.m3outline
                     }
                 }
             }
         }
 
-        // ------------------------------------------------------------------
-        // Detail
-        // ------------------------------------------------------------------
+        // =====================================================================
+        //  RIGHT COLUMN: Fast Repository Status Overview
+        // =====================================================================
         StyledRect {
             Layout.fillWidth: true
             Layout.fillHeight: true
             radius: Tokens.rounding.large
             color: Colours.tPalette.m3surfaceContainerLow
 
+            Item {
+                anchors.fill: parent
+                visible: !root.repo
+
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    spacing: Tokens.spacing.small
+
+                    MaterialIcon {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: "info"
+                        fontStyle: Tokens.font.icon.extraLarge
+                        color: Colours.tPalette.m3outline
+                    }
+
+                    StyledText {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: "Select a repository to view status"
+                        color: Colours.palette.m3onSurfaceVariant
+                        font: Tokens.font.body.large
+                    }
+                }
+            }
+
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: Tokens.padding.large
                 spacing: Tokens.spacing.medium
+                visible: !!root.repo
 
+                // 1. Repo Header
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: Tokens.spacing.small
+                    spacing: Tokens.spacing.medium
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 1
+                        spacing: 2
+
+                        RowLayout {
+                            spacing: Tokens.spacing.small
+
+                            StyledText {
+                                text: root.repo ? root.repo.name : ""
+                                font: Tokens.font.title.medium
+                                color: Colours.tPalette.m3onSurface
+                            }
+
+                            StateChip {
+                                state: root.repo ? root.repo.state : "unknown"
+                            }
+                        }
 
                         StyledText {
                             Layout.fillWidth: true
-                            text: root.repo ? (root.repo.owner ? root.repo.owner + "/" : "") + root.repo.name : "Caelestia Git"
-                            color: Colours.palette.m3onSurface
-                            font: Tokens.font.title.medium
-                            elide: Text.ElideRight
-                        }
-
-                        RowLayout {
-                            spacing: Tokens.spacing.extraSmall
-
-                            StateChip {
-                                visible: !!root.repo
-                                state: root.repo ? root.repo.state : "missing"
-                            }
-
-                            StyledText {
-                                visible: root.hasLocal
-                                text: root.status && root.status.branch ? root.status.branch : ""
-                                color: Colours.palette.m3onSurfaceVariant
-                                font: Tokens.font.mono.small
-                            }
-
-                            StyledText {
-                                visible: root.hasLocal && root.status && (root.status.ahead > 0 || root.status.behind > 0)
-                                text: root.status ? "↑" + root.status.ahead + " ↓" + root.status.behind : ""
-                                color: Colours.palette.m3onSurfaceVariant
-                                font: Tokens.font.mono.small
-                            }
-
-                            StyledText {
-                                visible: !!root.repo && !root.hasLocal
-                                text: root.repo ? root.repo.fullName : ""
-                                color: Colours.palette.m3onSurfaceVariant
-                                font: Tokens.font.mono.small
-                                elide: Text.ElideRight
-                            }
+                            text: root.repo ? (root.repo.localPath || root.repo.fullName) : ""
+                            color: Colours.palette.m3onSurfaceVariant
+                            font: Tokens.font.body.small
+                            elide: Text.ElideMiddle
                         }
                     }
 
-                    IconButton {
-                        visible: root.hasLocal
-                        icon: "cloud_download"
-                        type: IconButton.Text
-                        padding: Tokens.padding.small
-                        enabled: root.hasRemote && !CaelestiaGit.actionBusy
-                        onClicked: CaelestiaGit.fetchSelected()
-                    }
+                    // Action buttons
+                    RowLayout {
+                        spacing: Tokens.spacing.small
 
-                    IconButton {
-                        visible: root.hasLocal
-                        icon: "download"
-                        type: IconButton.Text
-                        padding: Tokens.padding.small
-                        enabled: root.hasRemote && !CaelestiaGit.actionBusy
-                        onClicked: CaelestiaGit.pullSelected()
-                    }
+                        StyledRect {
+                            implicitHeight: 36
+                            implicitWidth: openGitxRow.implicitWidth + Tokens.padding.medium * 2
+                            radius: Tokens.rounding.full
+                            color: Colours.tPalette.m3primary
 
-                    IconButton {
-                        visible: root.hasLocal
-                        icon: "upload"
-                        type: IconButton.Text
-                        padding: Tokens.padding.small
-                        enabled: root.hasRemote && !CaelestiaGit.actionBusy
-                        onClicked: CaelestiaGit.pushSelected()
-                    }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: CaelestiaGit.openFullApp()
+                            }
 
-                    IconButton {
-                        visible: root.hasLocal && !root.hasRemote
-                        icon: "cloud_upload"
-                        type: IconButton.Text
-                        padding: Tokens.padding.small
-                        enabled: !CaelestiaGit.actionBusy
-                        onClicked: CaelestiaGit.publishOpen = true
-                    }
+                            RowLayout {
+                                id: openGitxRow
+                                anchors.centerIn: parent
+                                spacing: 4
 
-                    IconButton {
-                        visible: root.hasLocal
-                        icon: "folder_open"
-                        type: IconButton.Text
-                        padding: Tokens.padding.small
-                        onClicked: CaelestiaGit.openFolder()
-                    }
+                                MaterialIcon {
+                                    text: "open_in_new"
+                                    fontStyle: Tokens.font.icon.small
+                                    color: Colours.palette.m3onPrimary
+                                }
 
-                    IconButton {
-                        icon: "open_in_new"
-                        type: IconButton.Text
-                        padding: Tokens.padding.small
-                        onClicked: CaelestiaGit.openFullApp()
-                    }
-
-                    MiniButton {
-                        visible: !!root.repo && !root.hasLocal
-                        text: "Clone"
-                        icon: "cloud_download"
-                        primary: true
-                        enabled: !CaelestiaGit.actionBusy
-                        onClicked: CaelestiaGit.cloneSelected()
-                    }
-                }
-
-                StyledText {
-                    Layout.fillWidth: true
-                    visible: !!root.repo && root.hasLocal
-                    text: root.repo ? root.repo.localPath : ""
-                    color: Colours.palette.m3onSurfaceVariant
-                    font: Tokens.font.mono.small
-                    elide: Text.ElideMiddle
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 2
-                    visible: root.hasLocal
-
-                    Repeater {
-                        model: root.tabs
-
-                        delegate: PanelTab {
-                            label: modelData.label
-                            icon: modelData.icon
-                            badge: modelData.badge
-                            active: CaelestiaGit.tab === index
-                            onClicked: {
-                                CaelestiaGit.tab = index;
-                                if (index === 1) {
-                                    if (CaelestiaGit.logData.length === 0)
-                                        CaelestiaGit.loadLog();
-                                    else if (!CaelestiaGit.commitDetail && CaelestiaGit.logData.length > 0)
-                                        CaelestiaGit.loadCommitDetail(CaelestiaGit.logData[0].hash);
-                                } else if (index === 2 && !CaelestiaGit.detail) {
-                                    CaelestiaGit.loadDetail();
+                                StyledText {
+                                    text: "Open in GitX"
+                                    font: Tokens.font.label.medium
+                                    color: Colours.palette.m3onPrimary
                                 }
                             }
                         }
-                    }
 
-                    Item {
-                        Layout.fillWidth: true
-                    }
-
-                    StyledText {
-                        visible: CaelestiaGit.actionBusy && CaelestiaGit.actionLabel !== ""
-                        text: CaelestiaGit.actionLabel
-                        color: Colours.palette.m3onSurfaceVariant
-                        font: Tokens.font.label.small
+                        IconButton {
+                            icon: "folder_open"
+                            type: IconButton.FilledTonal
+                            padding: Tokens.padding.small
+                            onClicked: CaelestiaGit.openFolder()
+                        }
                     }
                 }
 
-                Item {
+                StyledRect {
+                    Layout.fillWidth: true
+                    implicitHeight: 1
+                    color: Colours.tPalette.m3outlineVariant
+                }
+
+                // 2. Status Cards Grid
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Tokens.spacing.medium
+
+                    // Card: Branch & Sync
+                    StyledRect {
+                        Layout.fillWidth: true
+                        implicitHeight: 100
+                        radius: Tokens.rounding.medium
+                        color: Colours.tPalette.m3surfaceContainer
+
+                        ColumnLayout {
+                            anchors.fill: parent
+                            anchors.margins: Tokens.padding.medium
+                            spacing: 4
+
+                            RowLayout {
+                                MaterialIcon {
+                                    text: "branching"
+                                    fontStyle: Tokens.font.icon.small
+                                    color: Colours.tPalette.m3primary
+                                }
+                                StyledText {
+                                    text: "Active Branch"
+                                    font: Tokens.font.label.medium
+                                    color: Colours.tPalette.m3onSurfaceVariant
+                                }
+                            }
+
+                            StyledText {
+                                text: root.repo && root.repo.branch ? root.repo.branch : "main"
+                                font: Tokens.font.title.small
+                                color: Colours.tPalette.m3onSurface
+                            }
+
+                            StyledText {
+                                text: {
+                                    if (!root.repo) return "";
+                                    const ahead = root.repo.ahead || 0;
+                                    const behind = root.repo.behind || 0;
+                                    if (ahead > 0 && behind > 0) return `↑ ${ahead} ahead, ↓ ${behind} behind`;
+                                    if (ahead > 0) return `↑ ${ahead} commits ahead of remote`;
+                                    if (behind > 0) return `↓ ${behind} commits behind remote`;
+                                    return "✓ Synced with remote";
+                                }
+                                font: Tokens.font.body.small
+                                color: (root.repo && (root.repo.ahead || root.repo.behind)) ? Colours.palette.m3tertiary : Colours.palette.m3primary
+                            }
+                        }
+                    }
+
+                    // Card: Working Tree State
+                    StyledRect {
+                        Layout.fillWidth: true
+                        implicitHeight: 100
+                        radius: Tokens.rounding.medium
+                        color: Colours.tPalette.m3surfaceContainer
+
+                        ColumnLayout {
+                            anchors.fill: parent
+                            anchors.margins: Tokens.padding.medium
+                            spacing: 4
+
+                            RowLayout {
+                                MaterialIcon {
+                                    text: root.counts.changed > 0 ? "warning" : "check_circle"
+                                    fontStyle: Tokens.font.icon.small
+                                    color: root.counts.changed > 0 ? Colours.palette.m3tertiary : Colours.palette.m3primary
+                                }
+                                StyledText {
+                                    text: "Working Tree"
+                                    font: Tokens.font.label.medium
+                                    color: Colours.tPalette.m3onSurfaceVariant
+                                }
+                            }
+
+                            StyledText {
+                                text: root.counts.changed > 0 ? `${root.counts.changed} modified files` : "Clean working directory"
+                                font: Tokens.font.title.small
+                                color: root.counts.changed > 0 ? Colours.palette.m3tertiary : Colours.palette.m3onSurface
+                            }
+
+                            StyledText {
+                                text: root.counts.changed > 0 ? `${root.counts.staged} staged • ${root.counts.unstaged} unstaged • ${root.counts.untracked} untracked` : "No uncommitted changes"
+                                font: Tokens.font.body.small
+                                color: Colours.palette.m3onSurfaceVariant
+                            }
+                        }
+                    }
+                }
+
+                // 3. Changed Files Glance (if any)
+                ColumnLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+                    spacing: Tokens.spacing.small
 
-                    ChangesPane {
-                        anchors.fill: parent
-                        visible: root.hasLocal && CaelestiaGit.tab === 0
-                    }
-
-                    HistoryPane {
-                        anchors.fill: parent
-                        visible: root.hasLocal && CaelestiaGit.tab === 1
-                    }
-
-                    BranchesPane {
-                        anchors.fill: parent
-                        visible: root.hasLocal && CaelestiaGit.tab === 2
-                    }
-
-                    ColumnLayout {
-                        anchors.centerIn: parent
-                        width: parent.width - Tokens.padding.extraLarge * 2
-                        spacing: Tokens.spacing.small
-                        visible: root.repo && !root.hasLocal
-
-                        MaterialIcon {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: "cloud_off"
-                            color: Colours.palette.m3onSurfaceVariant
-                            fontStyle: Tokens.font.icon.extraLarge
-                        }
+                    RowLayout {
+                        Layout.fillWidth: true
 
                         StyledText {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: "This repository isn’t cloned"
-                            color: Colours.palette.m3onSurface
-                            font: Tokens.font.title.small
+                            text: root.counts.changed > 0 ? "Changed Files Glance" : "Repository Details"
+                            font: Tokens.font.label.large
+                            color: Colours.tPalette.m3onSurface
                         }
+
+                        Item { Layout.fillWidth: true }
 
                         StyledText {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: root.repo ? root.repo.description || "Clone it to commit, pull and push from the panel." : ""
-                            color: Colours.palette.m3onSurfaceVariant
-                            font: Tokens.font.body.small
-                            wrapMode: Text.Wrap
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-
-                        MiniButton {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: "Clone"
-                            icon: "cloud_download"
-                            primary: true
-                            enabled: !CaelestiaGit.actionBusy
-                            onClicked: CaelestiaGit.cloneSelected()
+                            visible: root.counts.changed > 0
+                            text: "Full diff & staging in GitX"
+                            font: Tokens.font.label.small
+                            color: Colours.palette.m3outline
                         }
                     }
 
-                    ColumnLayout {
-                        anchors.centerIn: parent
-                        spacing: Tokens.spacing.small
-                        visible: !root.repo
+                    // List of files
+                    StyledRect {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        radius: Tokens.rounding.medium
+                        color: Colours.tPalette.m3surfaceContainer
 
-                        MaterialIcon {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: "account_tree"
-                            color: Colours.palette.m3onSurfaceVariant
-                            fontStyle: Tokens.font.icon.extraLarge
+                        ListView {
+                            anchors.fill: parent
+                            anchors.margins: Tokens.padding.small
+                            clip: true
+                            spacing: 4
+                            visible: root.counts.changed > 0 && root.status && root.status.files && root.status.files.length > 0
+                            model: root.status && root.status.files ? root.status.files.slice(0, 50) : []
+
+                            delegate: RowLayout {
+                                required property var modelData
+                                width: ListView.view.width
+                                spacing: Tokens.spacing.small
+
+                                StyledText {
+                                    text: modelData.status || "M"
+                                    font: Tokens.font.label.small
+                                    color: modelData.status === "A" || modelData.status === "?" ? Colours.palette.m3primary : Colours.palette.m3tertiary
+                                }
+
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    text: modelData.path || ""
+                                    font: Tokens.font.body.medium
+                                    color: Colours.palette.m3onSurface
+                                    elide: Text.ElideMiddle
+                                }
+                            }
                         }
 
-                        StyledText {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: "Select a repository"
-                            color: Colours.palette.m3onSurface
-                            font: Tokens.font.title.small
-                        }
+                        // Clean state placeholder
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            visible: root.counts.changed === 0
+                            spacing: Tokens.spacing.extraSmall
 
-                        StyledText {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: "The left list combines your GitHub account and your disk."
-                            color: Colours.palette.m3onSurfaceVariant
-                            font: Tokens.font.body.small
+                            MaterialIcon {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: "done_all"
+                                fontStyle: Tokens.font.icon.extraLarge
+                                color: Colours.palette.m3primary
+                            }
+
+                            StyledText {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: "Working tree clean"
+                                font: Tokens.font.body.large
+                                color: Colours.palette.m3onSurface
+                            }
+
+                            StyledText {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: "No files need staging or committing."
+                                font: Tokens.font.body.small
+                                color: Colours.palette.m3onSurfaceVariant
+                            }
                         }
                     }
                 }
-            }
-        }
-    }
-
-    // ----------------------------------------------------------------------
-    // Toast
-    // ----------------------------------------------------------------------
-    StyledRect {
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        anchors.margins: Tokens.padding.large
-        width: Math.min(360, toastText.implicitWidth + Tokens.padding.large * 2)
-        implicitHeight: toastText.implicitHeight + Tokens.padding.medium * 2
-        radius: Tokens.rounding.medium
-        color: CaelestiaGit.toastKind === "bad" ? Colours.palette.m3errorContainer : CaelestiaGit.toastKind === "warn" ? Colours.palette.m3tertiaryContainer : Colours.palette.m3secondaryContainer
-        opacity: CaelestiaGit.toastVisible ? 1 : 0
-        visible: opacity > 0.01
-
-        Behavior on opacity {
-            Anim {
-                type: Anim.FastEffects
-            }
-        }
-
-        StyledText {
-            id: toastText
-
-            anchors.centerIn: parent
-            width: parent.width - Tokens.padding.large * 2
-            text: CaelestiaGit.toastText
-            color: CaelestiaGit.toastKind === "bad" ? Colours.palette.m3onErrorContainer : CaelestiaGit.toastKind === "warn" ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onSecondaryContainer
-            font: Tokens.font.body.small
-            wrapMode: Text.Wrap
-            horizontalAlignment: Text.AlignHCenter
-        }
-    }
-
-    NewRepoDialog {
-        anchors.fill: parent
-        open: CaelestiaGit.newRepoOpen
-        onClosed: CaelestiaGit.newRepoOpen = false
-    }
-
-    PublishDialog {
-        anchors.fill: parent
-        open: CaelestiaGit.publishOpen
-        repo: root.repo
-        onClosed: CaelestiaGit.publishOpen = false
-    }
-
-    // ----------------------------------------------------------------------
-    // Local components
-    // ----------------------------------------------------------------------
-    component FilterChip: StyledRect {
-        id: chip
-
-        property string text: ""
-        property int count: 0
-        property bool active: false
-        signal clicked
-
-        implicitWidth: chipRow.implicitWidth + Tokens.padding.medium * 2
-        implicitHeight: 28
-        radius: Tokens.rounding.full
-        color: active ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainerHigh
-
-        StateLayer {
-            anchors.fill: parent
-            radius: chip.radius
-            color: Colours.palette.m3primary
-            onClicked: chip.clicked()
-        }
-
-        RowLayout {
-            id: chipRow
-
-            anchors.centerIn: parent
-            spacing: Tokens.spacing.extraSmall
-
-            StyledText {
-                text: chip.text
-                color: chip.active ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
-                font: Tokens.font.label.small
-            }
-
-            StyledText {
-                text: chip.count
-                color: chip.active ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
-                font: Tokens.font.mono.small
-                opacity: 0.75
-            }
-        }
-    }
-
-    component PanelTab: StyledRect {
-        id: tab
-
-        property string label: ""
-        property string icon: ""
-        property int badge: 0
-        property bool active: false
-        signal clicked
-
-        implicitWidth: tabRow.implicitWidth + Tokens.padding.medium * 2
-        implicitHeight: 32
-        radius: Tokens.rounding.full
-        color: active ? Colours.palette.m3secondaryContainer : "transparent"
-
-        StateLayer {
-            anchors.fill: parent
-            radius: tab.radius
-            color: Colours.palette.m3primary
-            onClicked: tab.clicked()
-        }
-
-        RowLayout {
-            id: tabRow
-
-            anchors.centerIn: parent
-            spacing: Tokens.spacing.extraSmall
-
-            MaterialIcon {
-                text: tab.icon
-                color: tab.active ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
-                fontStyle: Tokens.font.icon.small
-            }
-
-            StyledText {
-                text: tab.label
-                color: tab.active ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
-                font: Tokens.font.label.small
-            }
-
-            StyledText {
-                visible: tab.badge > 0
-                text: tab.badge
-                color: tab.active ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
-                font: Tokens.font.mono.small
-                opacity: 0.8
             }
         }
     }

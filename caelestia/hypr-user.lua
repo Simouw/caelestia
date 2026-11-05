@@ -1,7 +1,7 @@
--- Disposition clavier AZERTY (français) & Unités Métriques
+-- Disposition clavier AZERTY (français) & US (anglais) & Unités Métriques
 hl.config({
     input = {
-        kb_layout = "fr",
+        kb_layout = "fr,us",
     },
 })
 hl.env("LC_MEASUREMENT", "fr_FR.UTF-8")
@@ -16,6 +16,14 @@ hl.on("hyprland.start", function()
     -- Restauration automatique garantie du fond d'écran et du thème au démarrage
     hl.exec_cmd("test -f ~/.local/state/caelestia/wallpaper/path.txt && caelestia wallpaper -f \"$(cat ~/.local/state/caelestia/wallpaper/path.txt)\"")
 end)
+
+-- Fenêtres flottantes centrées pour les terminaux d'IA (OpenCode, Antigravity, Codex, Claude)
+hl.window_rule({
+    match = { title = "^(OpenCode|Antigravity|Codex|Claude|Floating Terminal)$" },
+    float = true,
+    size = "(monitor_w*0.75) (monitor_h*0.80)",
+    center = true,
+})
 
 -- Fenêtre flottante de la liste des raccourcis
 hl.bind("SUPER + slash", hl.dsp.exec_cmd(home .. "/.config/caelestia/cheatsheet.sh"))
