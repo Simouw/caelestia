@@ -66,7 +66,7 @@ Singleton {
             return false;
 
         const target = item.binPath && item.binPath.length > 0 ? item.binPath : item.id;
-        Hypr.dispatch("exec foot -e " + target);
+        Quickshell.execDetached(["foot", "-e", target]);
         return true;
     }
 

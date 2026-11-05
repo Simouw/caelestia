@@ -122,6 +122,7 @@ Item {
                     id: cardArea
 
                     anchors.fill: parent
+                    z: 10
                     hoverEnabled: modelData.installed
                     cursorShape: modelData.installed ? Qt.PointingHandCursor : Qt.ArrowCursor
                     enabled: modelData.installed
@@ -200,7 +201,7 @@ Item {
                             Layout.fillWidth: true
                             text: modelData.binPath
                             font.pointSize: 9
-                            font.family: Tokens.font.mono.family
+                            font.family: "monospace"
                             color: Colours.tPalette.m3outline
                             elide: Text.ElideMiddle
                         }
