@@ -12,9 +12,9 @@ Unlike default Caelestia setups configured around VSCode/Codium and Firefox/Zen,
 
 * **Default Browser** : **Helium Browser** (`helium-browser`), mapped to `Super + W`.
 * **Default Editor** : **Neovim** in Foot terminal (`foot -e nvim`), mapped to `Super + C` (powered by LazyVim with full French typing/correction aids and custom themes).
-* **AI CLI Launchers** : **Right-Edge Slide Tab** (located at the top third of the right border). Hover or click to reveal instant one-click floating terminals for **OpenCode**, **Antigravity (`agy`)**, **Codex**, and **Claude**.
+* **AI CLI Launcher** : Dedicated button in the Caelestia bar (`auto_awesome`). Displays instant status badges for installed vs uninstalled AI CLIs (**OpenCode**, **Antigravity (`agy`)**, **Codex**, and **Claude**) and launches them directly into the active workspace as a standard tiled terminal (`foot -e <cli>`).
 * **AI Tooling by Default** : Auto-installs **OpenCode CLI**, **OpenAI Codex CLI**, and **Antigravity CLI** (`agy`).
-* **Terminal** : **Foot** (customized Caelestia styling with centered floating rules for AI sessions).
+* **Terminal** : **Foot** (customized Caelestia styling with standard tiling workspace integration).
 * **Keyboard Layout Switcher** : **AZERTY (`fr`) & QWERTY (`us`)** support. Click the keyboard indicator at the bottom of the Caelestia sidebar (`Super + N`) to switch instantaneously between French and US layouts.
 * **Top Bar Timer & Pomodoro** : Integrated timer widget in the top bar. Click to select 5m, 15m, 25m (Pomodoro), or 50m presets, with live countdown and audio/OSD completion alert.
 * **Streamlined Git Status Glance** : Lightweight, zero-lag **Caelestia Git** tab inside the Dashboard (`Super + G` or `Super + K` → Git) showing clean working tree overview, branch sync status, changed files, and a one-click *"Open in GitX"* button.
@@ -136,7 +136,7 @@ This setup stands on the shoulders of fantastic open-source projects. Heartfelt 
 * **Personal Additions by [Simouw](https://github.com/Simouw)**:
   * **[Caelestia Git Panel](https://github.com/Simouw/caelestia-git)** — 100% standalone, zero-dependency Git status dashboard for the Caelestia shell.
   * **[GitXplorer (GitX)](https://github.com/Simouw/GitX)** — Companion desktop Git visualizer and manager.
-  * Right-edge AI slide launcher, topbar timer widget, AZERTY/QWERTY layout switcher, unified installer, wallpaper gallery, and Neovim customizations.
+  * Topbar AI assistant popout launcher, topbar timer widget, AZERTY/QWERTY layout switcher, unified installer, wallpaper gallery, and Neovim customizations.
 
 ---
 

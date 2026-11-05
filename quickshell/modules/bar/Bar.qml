@@ -127,6 +127,15 @@ ColumnLayout {
                         ...res.slice(insertIdx)
                     ];
                 }
+                if (!res.some(e => e.id === "ai")) {
+                    const statusIdx = res.findIndex(e => e.id === "statusIcons");
+                    const insertIdx = statusIdx >= 0 ? statusIdx : Math.max(0, res.length - 1);
+                    res = [
+                        ...res.slice(0, insertIdx),
+                        { id: "ai", enabled: true },
+                        ...res.slice(insertIdx)
+                    ];
+                }
                 return res;
             }
         }
@@ -199,6 +208,19 @@ ColumnLayout {
                     TimerButton {
                         objectName: "taskbarTimerButton"
                         screenState: root.screenState
+                        bar: root
+                        popouts: root.popouts
+                    }
+                }
+            }
+            DelegateChoice {
+                roleValue: "ai"
+                delegate: EntryWrapper {
+                    AiButton {
+                        objectName: "taskbarAiButton"
+                        screenState: root.screenState
+                        bar: root
+                        popouts: root.popouts
                     }
                 }
             }
