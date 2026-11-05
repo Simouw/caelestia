@@ -1,81 +1,401 @@
 #!/usr/bin/env node
 'use strict'
 
-// Caelestia Git Panel -> cmoGit / GitXplorer bridge.
-const { spawnSync } = require('node:child_process')
-const path = require('node:path')
+/**
+ * Caelestia Git Bridge - 100% Standalone & Self-Contained.
+ *
+ * Provides a lightning-fast, zero-dependency JSON API for the Caelestia Git Panel.
+ * Uses only Node.js standard libraries and the system's `git` binary.
+ *
+ * Methods:
+ *   snapshot - Returns cached project snapshot (instantaneous)
+ *   refresh  - Scans user directories for git repositories and updates cache
+ *   detail   - Returns detailed status for a specific repository path
+ *   open     - Opens a directory or file in the default file manager
+ *   openApp  - Opens a dedicated git GUI (GitX/gitxplorer) if available, or file manager
+ */
+
+const { spawnSync, execDetached } = require('node:child_process')
 const fs = require('node:fs')
+const path = require('node:path')
+const os = require('node:os')
 
 const method = process.argv[2] || 'snapshot'
-const payload = process.argv[3] || '{}'
+let payload = {}
+try {
+  payload = JSON.parse(process.argv[3] || '{}')
+} catch {
+  payload = {}
+}
+
+const home = os.homedir()
+const CACHE_DIR = path.join(home, '.cache', 'caelestia-git')
+const CACHE_FILE = path.join(CACHE_DIR, 'snapshot.json')
+const CONFIG_FILE = path.join(home, '.config', 'caelestia-git', 'config.json')
+
+function reply(data) {
+  process.stdout.write(JSON.stringify({ ok: true, data }) + '\n')
+  process.exit(0)
+}
 
 function fail(message) {
   process.stdout.write(JSON.stringify({
     ok: false,
     error: { message, code: 'BRIDGE_ERROR' }
   }) + '\n')
+  process.exit(0)
 }
 
-const home = process.env.HOME || ''
-const candidates = [
-  process.env.CMOGIT_BIN,
-  path.join(home, 'code/ricing/GitX/bin/gitxplorer.cjs'),
-  path.join(home, '.local/bin/cmogit'),
-  path.join(home, '.local/bin/gitxplorer'),
-  'gitxplorer',
-  'cmogit'
-].filter(Boolean)
+function getScanRoots() {
+  const roots = new Set()
 
-let command = null
-let isScript = false
+  // 1. Custom user config if present
+  try {
+    if (fs.existsSync(CONFIG_FILE)) {
+      const cfg = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'))
+      if (Array.isArray(cfg.roots)) {
+        for (const r of cfg.roots) {
+          if (r && fs.existsSync(r)) roots.add(r)
+        }
+      }
+    }
+  } catch {}
 
-for (const cand of candidates) {
-  if (cand.includes('/') || cand.includes('\\')) {
+  // 2. GitX config roots if present (for interoperability)
+  try {
+    const gitxCfg = path.join(home, '.config', 'gitxplorer', 'config.json')
+    if (fs.existsSync(gitxCfg)) {
+      const cfg = JSON.parse(fs.readFileSync(gitxCfg, 'utf8'))
+      if (Array.isArray(cfg.roots)) {
+        for (const r of cfg.roots) {
+          if (r && fs.existsSync(r)) roots.add(r)
+        }
+      }
+    }
+  } catch {}
+
+  // 3. Common developer project locations
+  if (process.env.CODE_DIR && fs.existsSync(process.env.CODE_DIR)) roots.add(process.env.CODE_DIR)
+  if (process.env.PROJECTS_DIR && fs.existsSync(process.env.PROJECTS_DIR)) roots.add(process.env.PROJECTS_DIR)
+
+  const candidates = [
+    path.join(home, 'code'),
+    path.join(home, 'projects'),
+    path.join(home, 'src'),
+    path.join(home, 'dev'),
+    path.join(home, 'workspace'),
+    path.join(home, 'repos')
+  ]
+  for (const c of candidates) {
+    if (fs.existsSync(c)) roots.add(c)
+  }
+
+  // Fallback: if none exist, scan user home with depth 2
+  if (roots.size === 0) {
+    roots.add(home)
+  }
+
+  return [...roots]
+}
+
+function findGitRepos(roots, maxDepth = 4) {
+  const repoDirs = new Set()
+  const skipNames = new Set([
+    'node_modules', '.git', 'target', 'dist', 'build', '.cache',
+    '.local', '.cargo', '.rustup', '.npm', '.pnpm-store', '.gemini',
+    '.mozilla', '.thunderbird', '.var', 'venv', '.venv', '__pycache__'
+  ])
+
+  function walk(dir, depth) {
+    if (depth > maxDepth) return
+    let entries = []
     try {
-      if (fs.existsSync(cand)) {
-        command = cand
-        isScript = /\.(c?js)$/i.test(cand)
+      entries = fs.readdirSync(dir, { withFileTypes: true })
+    } catch {
+      return
+    }
+
+    let isGitRepo = false
+    for (const entry of entries) {
+      if (entry.name === '.git' && (entry.isDirectory() || entry.isFile())) {
+        isGitRepo = true
         break
       }
-    } catch {}
-  } else {
-    // Binary in PATH
-    command = cand
-    break
+    }
+
+    if (isGitRepo) {
+      repoDirs.add(dir)
+      return // Do not scan inside nested repos
+    }
+
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue
+      if (skipNames.has(entry.name)) continue
+      if (entry.name.startsWith('.') && entry.name !== '.config') continue
+      walk(path.join(dir, entry.name), depth + 1)
+    }
+  }
+
+  for (const root of roots) {
+    if (fs.existsSync(root)) {
+      walk(root, 0)
+    }
+  }
+
+  return [...repoDirs]
+}
+
+function inspectRepo(repoPath) {
+  try {
+    const statusRes = spawnSync('git', ['status', '--porcelain=v2', '--branch'], {
+      cwd: repoPath,
+      encoding: 'utf8',
+      timeout: 10000,
+      windowsHide: true
+    })
+    if (statusRes.error || statusRes.status !== 0) return null
+
+    let branch = 'main'
+    let ahead = 0
+    let behind = 0
+    let staged = 0
+    let unstaged = 0
+    let untracked = 0
+    let conflicts = 0
+    const files = []
+
+    for (const line of (statusRes.stdout || '').split('\n')) {
+      if (line.startsWith('# branch.head ')) {
+        branch = line.substring(14).trim()
+      } else if (line.startsWith('# branch.ab ')) {
+        const parts = line.substring(12).trim().split(/\s+/)
+        ahead = parseInt(parts[0], 10) || 0
+        behind = Math.abs(parseInt(parts[1], 10) || 0)
+      } else if (line.startsWith('1 ') || line.startsWith('2 ')) {
+        const parts = line.split(' ')
+        const xy = parts[1] || '..'
+        const filePath = parts[parts.length - 1] || ''
+        const s = xy[0] !== '.'
+        const u = xy[1] !== '.'
+        if (s) staged++
+        if (u) unstaged++
+        files.push({ path: filePath, worktree: xy[1], index: xy[0], staged: s, unstaged: u })
+      } else if (line.startsWith('? ')) {
+        untracked++
+        const filePath = line.substring(2).trim()
+        files.push({ path: filePath, worktree: '?', index: '?', untracked: true })
+      } else if (line.startsWith('u ')) {
+        conflicts++
+        const filePath = line.split(' ').pop() || ''
+        files.push({ path: filePath, conflict: true })
+      }
+    }
+
+    const logRes = spawnSync('git', ['log', '-1', '--format=%H%x1f%h%x1f%s%x1f%an%x1f%cI'], {
+      cwd: repoPath,
+      encoding: 'utf8',
+      timeout: 10000,
+      windowsHide: true
+    })
+    let lastCommit = null
+    if (logRes.stdout && logRes.stdout.trim()) {
+      const parts = logRes.stdout.trim().split('\x1f')
+      if (parts.length >= 5) {
+        lastCommit = {
+          hash: parts[0],
+          short: parts[1],
+          subject: parts[2],
+          author: parts[3],
+          date: parts[4],
+          commitDate: parts[4]
+        }
+      }
+    }
+
+    const remoteRes = spawnSync('git', ['config', '--get', 'remote.origin.url'], {
+      cwd: repoPath,
+      encoding: 'utf8',
+      timeout: 5000,
+      windowsHide: true
+    })
+    const remoteUrl = (remoteRes.stdout || '').trim()
+
+    // Determine owner/full name
+    let owner = 'local'
+    let fullName = path.basename(repoPath)
+    if (remoteUrl) {
+      const match = remoteUrl.match(/[:/]([^/:]+)\/([^/:]+?)(?:\.git)?$/)
+      if (match) {
+        owner = match[1]
+        fullName = `${match[1]}/${match[2]}`
+      }
+    }
+
+    const changed = staged + unstaged + untracked + conflicts
+    const dirty = changed > 0
+    let state = 'synced'
+    if (conflicts > 0) state = 'conflicted'
+    else if (dirty) state = 'dirty'
+    else if (ahead > 0 && behind > 0) state = 'diverged'
+    else if (ahead > 0) state = 'ahead'
+    else if (behind > 0) state = 'behind'
+
+    return {
+      id: fullName,
+      name: path.basename(repoPath),
+      fullName,
+      owner,
+      localPath: repoPath,
+      defaultBranch: branch,
+      state,
+      stateLabel: state === 'synced' ? 'Clean' : (state === 'dirty' ? 'Modified' : state),
+      local: {
+        path: repoPath,
+        branch,
+        ahead,
+        behind,
+        dirty,
+        conflicts,
+        counts: { staged, unstaged, untracked, conflicts, changed },
+        lastCommit,
+        remoteUrl
+      },
+      status: {
+        branch,
+        ahead,
+        behind,
+        counts: { staged, unstaged, untracked, conflicts, changed },
+        files
+      }
+    }
+  } catch (err) {
+    return null
   }
 }
 
-if (!command) {
-  fail('GitXplorer / cmoGit CLI not found. Install GitX or set CMOGIT_BIN.')
-  process.exit(0)
+function computeStats(repos) {
+  let dirty = 0
+  let ahead = 0
+  let behind = 0
+  let synced = 0
+  for (const r of repos) {
+    if (r.state === 'dirty' || r.state === 'conflicted') dirty++
+    else if (r.state === 'ahead') ahead++
+    else if (r.state === 'behind' || r.state === 'diverged') behind++
+    else if (r.state === 'synced') synced++
+  }
+  return {
+    total: repos.length,
+    local: repos.length,
+    missing: 0,
+    dirty,
+    ahead,
+    behind,
+    synced,
+    localOnly: 0
+  }
 }
 
-let execCmd = command
-let args
+function doScan() {
+  const roots = getScanRoots()
+  const paths = findGitRepos(roots)
+  const repos = []
 
-if (isScript) {
-  execCmd = process.execPath
-  args = [command, 'api', method, payload]
-} else {
-  args = ['api', method, payload]
+  for (const p of paths) {
+    const info = inspectRepo(p)
+    if (info) repos.push(info)
+  }
+
+  repos.sort((a, b) => a.name.localeCompare(b.name))
+
+  const snap = {
+    repos,
+    localOnly: [],
+    at: Date.now(),
+    roots,
+    stats: computeStats(repos)
+  }
+
+  try {
+    if (!fs.existsSync(CACHE_DIR)) fs.mkdirSync(CACHE_DIR, { recursive: true })
+    fs.writeFileSync(CACHE_FILE, JSON.stringify(snap, null, 2))
+  } catch {}
+
+  return snap
 }
 
-const result = spawnSync(execCmd, args, {
-  encoding: 'utf8',
-  timeout: 120000,
-  windowsHide: true,
-  shell: process.platform === 'win32',
-})
-
-if (result.error) {
-  fail(`Bridge execution failed: ${result.error.message}`)
-  process.exit(0)
+function getSnapshot() {
+  try {
+    if (fs.existsSync(CACHE_FILE)) {
+      const data = JSON.parse(fs.readFileSync(CACHE_FILE, 'utf8'))
+      if (Array.isArray(data.repos) && data.repos.length > 0) {
+        return data
+      }
+    }
+  } catch {}
+  return doScan()
 }
 
-if (result.stdout && result.stdout.trim()) {
-  process.stdout.write(result.stdout)
-} else {
-  const detail = (result.stderr || '').trim()
-  fail(detail || 'Empty response from backend CLI.')
+// ---------------------------------------------------------------------------
+// Method router
+// ---------------------------------------------------------------------------
+switch (method) {
+  case 'snapshot': {
+    reply(getSnapshot())
+    break
+  }
+
+  case 'refresh': {
+    reply(doScan())
+    break
+  }
+
+  case 'detail': {
+    const targetPath = payload.path || payload.target
+    if (!targetPath || !fs.existsSync(targetPath)) {
+      fail('Repository path not specified or does not exist.')
+    }
+    const info = inspectRepo(targetPath)
+    if (!info) fail('Failed to inspect repository at ' + targetPath)
+    reply(info)
+    break
+  }
+
+  case 'open': {
+    const target = payload.target || payload.path || home
+    spawnSync('xdg-open', [target], { stdio: 'ignore', windowsHide: true })
+    reply({ ok: true })
+    break
+  }
+
+  case 'openApp': {
+    // Try launching GitX if installed, otherwise open terminal or file manager
+    const candidates = [
+      path.join(home, 'code/ricing/GitX/bin/gitxplorer.cjs'),
+      path.join(home, '.local/bin/gitxplorer'),
+      path.join(home, '.local/bin/cmogit')
+    ]
+    let opened = false
+    for (const cand of candidates) {
+      if (fs.existsSync(cand)) {
+        try {
+          const { spawn } = require('node:child_process')
+          const proc = spawn(cand, [], { detached: true, stdio: 'ignore' })
+          proc.unref()
+          opened = true
+          break
+        } catch {}
+      }
+    }
+    if (!opened) {
+      spawnSync('xdg-open', [home], { stdio: 'ignore', windowsHide: true })
+    }
+    reply({ ok: true })
+    break
+  }
+
+  default: {
+    fail(`Unknown method: ${method}`)
+    break
+  }
 }
-process.exit(0)
