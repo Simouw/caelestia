@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import Caelestia.Config
@@ -9,11 +11,11 @@ Item {
 
     required property var modelData
     property var repo: modelData
-    property bool selected
+    property bool selected: false
     signal activated
 
     readonly property var local: repo ? repo.local : null
-    readonly property bool isMissing: repo && !repo.localPath
+    readonly property bool isMissing: !!repo && !repo.localPath
 
     width: ListView.view ? ListView.view.width : implicitWidth
     implicitWidth: 340
@@ -47,7 +49,7 @@ Item {
 
             MaterialIcon {
                 anchors.centerIn: parent
-                text: root.isMissing ? "cloud_off" : root.repo.external ? "account_tree" : "folder"
+                text: root.isMissing ? "cloud_off" : (root.repo && root.repo.external ? "account_tree" : "folder")
                 color: root.selected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurfaceVariant
                 fontStyle: Tokens.font.icon.small
             }
@@ -64,14 +66,14 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: root.repo ? root.repo.name : ""
+                    text: root.repo ? (root.repo.name || "") : ""
                     color: Colours.palette.m3onSurface
                     font: Tokens.font.body.small
                     elide: Text.ElideRight
                 }
 
                 StateChip {
-                    state: root.repo ? root.repo.state : "missing"
+                    state: root.repo && root.repo.state ? root.repo.state : "missing"
                 }
             }
 
@@ -85,7 +87,7 @@ Item {
                         if (!root.repo)
                             return "";
                         const owner = root.repo.owner || "local";
-                        const branch = root.local && root.local.branch ? root.local.branch : root.repo.defaultBranch;
+                        const branch = root.local && root.local.branch ? root.local.branch : (root.repo.defaultBranch || "");
                         return owner + (branch ? " · " + branch : "");
                     }
                     color: Colours.palette.m3onSurfaceVariant
@@ -94,13 +96,13 @@ Item {
                 }
 
                 StyledText {
-                    visible: root.local && (root.local.ahead > 0 || root.local.behind > 0)
+                    visible: !!root.local && ((root.local.ahead || 0) > 0 || (root.local.behind || 0) > 0)
                     text: {
                         if (!root.local)
                             return "";
-                        const a = root.local.ahead > 0 ? "↑" + root.local.ahead : "";
-                        const b = root.local.behind > 0 ? "↓" + root.local.behind : "";
-                        return a + " " + b;
+                        const a = (root.local.ahead || 0) > 0 ? "↑" + root.local.ahead : "";
+                        const b = (root.local.behind || 0) > 0 ? "↓" + root.local.behind : "";
+                        return (a + " " + b).trim();
                     }
                     color: Colours.palette.m3onSurfaceVariant
                     font: Tokens.font.mono.small

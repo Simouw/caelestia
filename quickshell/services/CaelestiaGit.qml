@@ -75,6 +75,9 @@ Singleton {
         case "behind":
             list = list.filter(r => ["behind", "diverged"].includes(r.state));
             break;
+        case "ahead":
+            list = list.filter(r => ["ahead", "diverged"].includes(r.state));
+            break;
         }
         const q = search.trim().toLowerCase();
         if (q) {

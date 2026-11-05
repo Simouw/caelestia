@@ -1,12 +1,7 @@
 #!/usr/bin/env node
 'use strict'
 
-// Caelestia Git Panel -> cmoGit bridge.
-// The panel only knows this bridge; cmoGit exposes a generic `cmogit api` command.
-//
-// Usage: caelestia-git-bridge <method> [json]
-// Env:   CMOGIT_BIN  path or command for the cmoGit CLI (default: cmogit)
-
+// Caelestia Git Panel -> cmoGit / GitXplorer bridge.
 const { spawnSync } = require('node:child_process')
 const path = require('node:path')
 const fs = require('node:fs')
@@ -21,22 +16,51 @@ function fail(message) {
   }) + '\n')
 }
 
-let command = process.env.CMOGIT_BIN || 'cmogit'
+const home = process.env.HOME || ''
+const candidates = [
+  process.env.CMOGIT_BIN,
+  path.join(home, 'code/ricing/GitX/bin/gitxplorer.cjs'),
+  path.join(home, '.local/bin/cmogit'),
+  path.join(home, '.local/bin/gitxplorer'),
+  'gitxplorer',
+  'cmogit'
+].filter(Boolean)
+
+let command = null
+let isScript = false
+
+for (const cand of candidates) {
+  if (cand.includes('/') || cand.includes('\\')) {
+    try {
+      if (fs.existsSync(cand)) {
+        command = cand
+        isScript = /\.(c?js)$/i.test(cand)
+        break
+      }
+    } catch {}
+  } else {
+    // Binary in PATH
+    command = cand
+    break
+  }
+}
+
+if (!command) {
+  fail('GitXplorer / cmoGit CLI not found. Install GitX or set CMOGIT_BIN.')
+  process.exit(0)
+}
+
+let execCmd = command
 let args
 
-if (/\.(c?js)$/i.test(command)) {
-  const script = path.resolve(command)
-  if (!fs.existsSync(script)) {
-    fail(`cmoGit CLI not found at ${script}. Install cmoGit or set CMOGIT_BIN.`)
-    process.exit(0)
-  }
-  command = process.execPath
-  args = [script, 'api', method, payload]
+if (isScript) {
+  execCmd = process.execPath
+  args = [command, 'api', method, payload]
 } else {
   args = ['api', method, payload]
 }
 
-const result = spawnSync(command, args, {
+const result = spawnSync(execCmd, args, {
   encoding: 'utf8',
   timeout: 120000,
   windowsHide: true,
@@ -44,9 +68,7 @@ const result = spawnSync(command, args, {
 })
 
 if (result.error) {
-  fail(result.error.code === 'ENOENT'
-    ? 'cmoGit CLI not found. Install cmoGit, add it to PATH, or set CMOGIT_BIN.'
-    : `cmoGit bridge failed: ${result.error.message}`)
+  fail(`Bridge execution failed: ${result.error.message}`)
   process.exit(0)
 }
 
@@ -54,6 +76,6 @@ if (result.stdout && result.stdout.trim()) {
   process.stdout.write(result.stdout)
 } else {
   const detail = (result.stderr || '').trim()
-  fail(detail || 'Empty response from cmoGit.')
+  fail(detail || 'Empty response from backend CLI.')
 }
 process.exit(0)
