@@ -28,7 +28,7 @@ Item {
         { id: "dirty", label: "Modified", count: CaelestiaGit.stats.dirty || 0 },
         { id: "ahead", label: "Ahead", count: CaelestiaGit.stats.ahead || 0 },
         { id: "behind", label: "Behind", count: CaelestiaGit.stats.behind || 0 },
-        { id: "synced", label: "Up to date", count: CaelestiaGit.stats.synced || 0 }
+        { id: "synced", label: "Clean", count: CaelestiaGit.stats.synced || 0 }
     ]
 
     Component.onCompleted: {
@@ -55,7 +55,9 @@ Item {
         //  LEFT COLUMN: Repositories List & Manual Scanner
         // =====================================================================
         StyledRect {
-            Layout.preferredWidth: 340
+            Layout.preferredWidth: 310
+            Layout.minimumWidth: 310
+            Layout.maximumWidth: 310
             Layout.fillHeight: true
             radius: Tokens.rounding.large
             color: Colours.tPalette.m3surfaceContainerLow
@@ -63,10 +65,10 @@ Item {
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: Tokens.padding.medium
+                anchors.margins: 10
                 spacing: Tokens.spacing.small
 
-                // Header with "Scanner le PC" button
+                // Header with "Scan" button
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: Tokens.spacing.small
@@ -85,10 +87,10 @@ Item {
 
                     Item { Layout.fillWidth: true }
 
-                    // Explicit Scan Button (Only scans when clicked by user)
+                    // Explicit Scan Button (Only scans on user click)
                     StyledRect {
-                        implicitHeight: 30
-                        implicitWidth: scanBtnRow.implicitWidth + Tokens.padding.small * 2
+                        implicitHeight: 28
+                        implicitWidth: scanBtnRow.implicitWidth + 14
                         radius: Tokens.rounding.full
                         color: CaelestiaGit.scanning ? Colours.palette.m3tertiaryContainer : Colours.palette.m3primaryContainer
 
@@ -119,7 +121,7 @@ Item {
                             }
 
                             StyledText {
-                                text: CaelestiaGit.scanning ? "Scan…" : "Scanner"
+                                text: CaelestiaGit.scanning ? "Scan…" : "Scan"
                                 font: Tokens.font.label.small
                                 color: CaelestiaGit.scanning ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onPrimaryContainer
                             }
@@ -127,8 +129,8 @@ Item {
                     }
                 }
 
-                // Filter chips
-                RowLayout {
+                // Filter chips with Flow (Wraps neatly across lines, never overflows!)
+                Flow {
                     Layout.fillWidth: true
                     spacing: 4
 
@@ -139,8 +141,8 @@ Item {
                             required property var modelData
 
                             readonly property bool active: CaelestiaGit.filter === modelData.id
-                            implicitHeight: 26
-                            implicitWidth: chipRow.implicitWidth + Tokens.padding.small * 2
+                            implicitHeight: 24
+                            implicitWidth: chipRow.implicitWidth + 12
                             radius: Tokens.rounding.full
                             color: active ? Colours.palette.m3primary : (cArea.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : Colours.tPalette.m3surfaceContainer)
 
@@ -176,14 +178,14 @@ Item {
                 // Search Bar
                 StyledRect {
                     Layout.fillWidth: true
-                    implicitHeight: 34
+                    implicitHeight: 32
                     radius: Tokens.rounding.medium
                     color: Colours.tPalette.m3surfaceContainer
 
                     RowLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: Tokens.padding.small
-                        anchors.rightMargin: Tokens.padding.small
+                        anchors.leftMargin: 8
+                        anchors.rightMargin: 8
                         spacing: Tokens.spacing.extraSmall
 
                         MaterialIcon {
@@ -230,7 +232,7 @@ Item {
                     StyledText {
                         anchors.centerIn: parent
                         visible: repoList.count === 0
-                        text: "No repositories found\nClick 'Scanner' to search PC"
+                        text: "No repositories found\nClick 'Scan' to search PC"
                         color: Colours.palette.m3outline
                         horizontalAlignment: Text.AlignHCenter
                     }
@@ -243,6 +245,7 @@ Item {
         // =====================================================================
         StyledRect {
             Layout.fillWidth: true
+            Layout.preferredWidth: 0
             Layout.fillHeight: true
             radius: Tokens.rounding.large
             color: Colours.tPalette.m3surfaceContainerLow
@@ -276,32 +279,35 @@ Item {
             // Main details view
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: Tokens.padding.large
-                spacing: Tokens.spacing.medium
+                anchors.margins: Tokens.padding.medium
+                spacing: Tokens.spacing.small
                 visible: !!root.repo
 
-                // 1. Repo Header & Navigation Tools (Pure Read-Only)
+                // 1. Repo Header & Action Icons (With preferredWidth: 0 to prevent overflowing!)
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: Tokens.spacing.medium
+                    spacing: Tokens.spacing.small
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 3
+                        Layout.preferredWidth: 0
+                        spacing: 2
 
                         RowLayout {
+                            Layout.fillWidth: true
                             spacing: Tokens.spacing.small
 
                             StyledText {
                                 text: root.repo ? (root.repo.name || root.repo.fullName || "") : ""
                                 font: Tokens.font.title.medium
                                 color: Colours.tPalette.m3onSurface
+                                elide: Text.ElideRight
                             }
 
                             // Branch Pill
                             StyledRect {
-                                implicitHeight: 24
-                                implicitWidth: branchRow.implicitWidth + Tokens.padding.small * 2
+                                implicitHeight: 22
+                                implicitWidth: branchRow.implicitWidth + 10
                                 radius: Tokens.rounding.small
                                 color: Colours.tPalette.m3surfaceContainerHigh
 
@@ -327,39 +333,31 @@ Item {
                             StateChip {
                                 state: root.repo && root.repo.state ? root.repo.state : "synced"
                             }
+
+                            Item { Layout.fillWidth: true }
                         }
 
-                        // Path / Remote display
-                        RowLayout {
-                            spacing: Tokens.spacing.small
-
-                            StyledText {
-                                text: root.repo ? (root.repo.localPath || root.repo.fullName || "") : ""
-                                color: Colours.palette.m3onSurfaceVariant
-                                font: Tokens.font.mono.small
-                                elide: Text.ElideMiddle
+                        // Path / Remote display (elides nicely in the middle)
+                        StyledText {
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: 0
+                            text: {
+                                if (!root.repo) return "";
+                                const p = root.repo.localPath || "";
+                                const r = root.repo.local?.remoteUrl || root.repo.cloneUrl || "";
+                                return p + (r ? " • " + r : "");
                             }
-
-                            StyledText {
-                                visible: !!root.repo && !!root.repo.local?.remoteUrl
-                                text: "•"
-                                color: Colours.palette.m3outline
-                                font: Tokens.font.body.small
-                            }
-
-                            StyledText {
-                                visible: !!root.repo && !!root.repo.local?.remoteUrl
-                                text: root.repo && root.repo.local ? (root.repo.local.remoteUrl || "") : ""
-                                color: Colours.palette.m3outline
-                                font: Tokens.font.mono.small
-                                elide: Text.ElideRight
-                            }
+                            color: Colours.palette.m3onSurfaceVariant
+                            font: Tokens.font.mono.small
+                            elide: Text.ElideMiddle
                         }
                     }
 
-                    // Navigation Actions (Copy path, Open Folder, Terminal, GitX)
+                    // Navigation Actions (Compact and right-aligned)
                     RowLayout {
-                        spacing: Tokens.spacing.small
+                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                        Layout.fillWidth: false
+                        spacing: 4
 
                         IconButton {
                             icon: "content_copy"
@@ -386,8 +384,8 @@ Item {
                         }
 
                         StyledRect {
-                            implicitHeight: 36
-                            implicitWidth: openGitxRow.implicitWidth + Tokens.padding.medium * 2
+                            implicitHeight: 32
+                            implicitWidth: openGitxRow.implicitWidth + 14
                             radius: Tokens.rounding.full
                             color: Colours.tPalette.m3surfaceContainerHigh
 
@@ -409,7 +407,7 @@ Item {
                                 }
 
                                 StyledText {
-                                    text: "Open GitX"
+                                    text: "GitX"
                                     font: Tokens.font.label.medium
                                     color: Colours.palette.m3onSurface
                                 }
@@ -424,25 +422,27 @@ Item {
                     color: Colours.tPalette.m3outlineVariant
                 }
 
-                // 2. Status Summary Cards (Overview of Sync, Tree, and Commit)
+                // 2. Status Summary Cards (Even 3-way split with preferredWidth: 0)
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: Tokens.spacing.small
+                    spacing: 6
 
                     // Card 1: Remote Sync Status
                     StyledRect {
                         Layout.fillWidth: true
-                        implicitHeight: 96
+                        Layout.preferredWidth: 0
+                        implicitHeight: 92
                         radius: Tokens.rounding.medium
                         color: Colours.tPalette.m3surfaceContainer
+                        clip: true
 
                         ColumnLayout {
                             anchors.fill: parent
-                            anchors.margins: Tokens.padding.medium
-                            spacing: 3
+                            anchors.margins: 10
+                            spacing: 2
 
                             RowLayout {
-                                spacing: 6
+                                spacing: 4
                                 MaterialIcon {
                                     text: {
                                         if (!root.repo || !root.hasLocal) return "cloud_off";
@@ -470,31 +470,37 @@ Item {
                             }
 
                             StyledText {
+                                Layout.fillWidth: true
+                                Layout.preferredWidth: 0
                                 text: {
                                     if (!root.repo || !root.hasLocal) return "Not cloned locally";
                                     const ahead = root.repo.local?.ahead || root.repo.ahead || 0;
                                     const behind = root.repo.local?.behind || root.repo.behind || 0;
-                                    if (ahead > 0 && behind > 0) return `↑ ${ahead} ahead • ↓ ${behind} behind`;
+                                    if (ahead > 0 && behind > 0) return `↑ ${ahead} • ↓ ${behind}`;
                                     if (ahead > 0) return `↑ ${ahead} commit(s) ahead`;
                                     if (behind > 0) return `↓ ${behind} commit(s) behind`;
-                                    return "Up to date with remote";
+                                    return "Up to date";
                                 }
                                 font: Tokens.font.title.small
                                 color: Colours.tPalette.m3onSurface
+                                elide: Text.ElideRight
                             }
 
                             StyledText {
+                                Layout.fillWidth: true
+                                Layout.preferredWidth: 0
                                 text: {
                                     if (!root.repo || !root.hasLocal) return "Missing local clone";
                                     const ahead = root.repo.local?.ahead || root.repo.ahead || 0;
                                     const behind = root.repo.local?.behind || root.repo.behind || 0;
-                                    if (ahead > 0 && behind > 0) return "Diverged — need rebase or merge";
-                                    if (ahead > 0) return "Local commits ready to push";
-                                    if (behind > 0) return "Remote updates ready to pull";
+                                    if (ahead > 0 && behind > 0) return "Diverged — need merge";
+                                    if (ahead > 0) return "Ready to push";
+                                    if (behind > 0) return "Ready to pull";
                                     return "In sync with upstream";
                                 }
                                 font: Tokens.font.body.small
                                 color: Colours.palette.m3onSurfaceVariant
+                                elide: Text.ElideRight
                             }
                         }
                     }
@@ -502,17 +508,19 @@ Item {
                     // Card 2: Working Tree Status
                     StyledRect {
                         Layout.fillWidth: true
-                        implicitHeight: 96
+                        Layout.preferredWidth: 0
+                        implicitHeight: 92
                         radius: Tokens.rounding.medium
                         color: Colours.tPalette.m3surfaceContainer
+                        clip: true
 
                         ColumnLayout {
                             anchors.fill: parent
-                            anchors.margins: Tokens.padding.medium
-                            spacing: 3
+                            anchors.margins: 10
+                            spacing: 2
 
                             RowLayout {
-                                spacing: 6
+                                spacing: 4
                                 MaterialIcon {
                                     text: root.counts.changed > 0 ? "edit_document" : "check_circle"
                                     color: root.counts.changed > 0 ? Colours.palette.m3tertiary : Colours.palette.m3primary
@@ -526,15 +534,21 @@ Item {
                             }
 
                             StyledText {
+                                Layout.fillWidth: true
+                                Layout.preferredWidth: 0
                                 text: root.counts.changed > 0 ? `${root.counts.changed} modified file(s)` : "Clean working tree"
                                 font: Tokens.font.title.small
                                 color: root.counts.changed > 0 ? Colours.palette.m3tertiary : Colours.palette.m3onSurface
+                                elide: Text.ElideRight
                             }
 
                             StyledText {
-                                text: root.counts.changed > 0 ? `${root.counts.staged} staged • ${root.counts.unstaged} unstaged • ${root.counts.untracked} untracked` : "No uncommitted modifications"
+                                Layout.fillWidth: true
+                                Layout.preferredWidth: 0
+                                text: root.counts.changed > 0 ? `${root.counts.staged} staged • ${root.counts.unstaged} unstaged` : "No uncommitted changes"
                                 font: Tokens.font.body.small
                                 color: Colours.palette.m3onSurfaceVariant
+                                elide: Text.ElideRight
                             }
                         }
                     }
@@ -542,17 +556,19 @@ Item {
                     // Card 3: Latest Commit Info
                     StyledRect {
                         Layout.fillWidth: true
-                        implicitHeight: 96
+                        Layout.preferredWidth: 0
+                        implicitHeight: 92
                         radius: Tokens.rounding.medium
                         color: Colours.tPalette.m3surfaceContainer
+                        clip: true
 
                         ColumnLayout {
                             anchors.fill: parent
-                            anchors.margins: Tokens.padding.medium
-                            spacing: 3
+                            anchors.margins: 10
+                            spacing: 2
 
                             RowLayout {
-                                spacing: 6
+                                spacing: 4
                                 MaterialIcon {
                                     text: "history"
                                     color: Colours.tPalette.m3primary
@@ -574,7 +590,8 @@ Item {
 
                             StyledText {
                                 Layout.fillWidth: true
-                                text: root.repo && root.repo.local?.lastCommit ? root.repo.local.lastCommit.subject : "No commit info available"
+                                Layout.preferredWidth: 0
+                                text: root.repo && root.repo.local?.lastCommit ? root.repo.local.lastCommit.subject : "No commit info"
                                 font: Tokens.font.body.medium
                                 color: Colours.tPalette.m3onSurface
                                 elide: Text.ElideRight
@@ -582,6 +599,7 @@ Item {
 
                             StyledText {
                                 Layout.fillWidth: true
+                                Layout.preferredWidth: 0
                                 text: {
                                     if (!root.repo || !root.repo.local?.lastCommit) return "";
                                     const c = root.repo.local.lastCommit;
@@ -597,18 +615,20 @@ Item {
                     }
                 }
 
-                // 3. Status Detail / Glance Area (List of modified files OR Clean State)
+                // 3. Status Detail / Glance Area
                 StyledRect {
                     Layout.fillWidth: true
+                    Layout.preferredWidth: 0
                     Layout.fillHeight: true
                     radius: Tokens.rounding.medium
                     color: Colours.tPalette.m3surfaceContainer
+                    clip: true
 
-                    // View 1: If repository has uncommitted modifications -> show clean list of changed files
+                    // View 1: If modified -> show clean list of changed files
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: Tokens.padding.medium
-                        spacing: Tokens.spacing.small
+                        anchors.margins: 10
+                        spacing: 6
                         visible: root.counts.changed > 0
 
                         RowLayout {
@@ -645,15 +665,15 @@ Item {
                             delegate: StyledRect {
                                 required property var modelData
                                 width: ListView.view.width
-                                implicitHeight: 32
+                                implicitHeight: 30
                                 radius: Tokens.rounding.small
                                 color: Colours.tPalette.m3surfaceContainerHigh
 
                                 RowLayout {
                                     anchors.fill: parent
-                                    anchors.leftMargin: Tokens.padding.small
-                                    anchors.rightMargin: Tokens.padding.small
-                                    spacing: Tokens.spacing.small
+                                    anchors.leftMargin: 8
+                                    anchors.rightMargin: 8
+                                    spacing: 8
 
                                     // Status Badge (M, ?, A, D)
                                     StyledRect {
@@ -672,6 +692,7 @@ Item {
 
                                     StyledText {
                                         Layout.fillWidth: true
+                                        Layout.preferredWidth: 0
                                         text: modelData.path || ""
                                         font: Tokens.font.mono.small
                                         color: Colours.palette.m3onSurface
@@ -690,17 +711,17 @@ Item {
                         }
                     }
 
-                    // View 2: If repository is clean -> show clean confirmation state
+                    // View 2: If clean -> show clean confirmation state
                     ColumnLayout {
                         anchors.centerIn: parent
                         visible: root.counts.changed === 0
-                        spacing: Tokens.spacing.small
+                        spacing: 6
 
                         MaterialIcon {
                             Layout.alignment: Qt.AlignHCenter
                             text: "verified"
                             color: Colours.palette.m3primary
-                            fontStyle: Tokens.font.icon.extraLarge
+                            fontStyle: Tokens.font.icon.large
                         }
 
                         StyledText {
@@ -720,15 +741,15 @@ Item {
                         StyledRect {
                             Layout.alignment: Qt.AlignHCenter
                             visible: !!root.repo && !!root.repo.local?.lastCommit
-                            implicitWidth: Math.min(500, root.width - 400)
-                            implicitHeight: lastCommitBox.implicitHeight + Tokens.padding.medium * 2
+                            implicitWidth: Math.min(480, root.width - 380)
+                            implicitHeight: lastCommitBox.implicitHeight + 16
                             radius: Tokens.rounding.medium
                             color: Colours.tPalette.m3surfaceContainerHigh
 
                             ColumnLayout {
                                 id: lastCommitBox
                                 anchors.centerIn: parent
-                                width: parent.implicitWidth - Tokens.padding.medium * 2
+                                width: parent.implicitWidth - 16
                                 spacing: 4
 
                                 RowLayout {

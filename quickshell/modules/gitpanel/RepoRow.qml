@@ -16,8 +16,8 @@ Item {
     readonly property var local: repo ? repo.local : null
     readonly property bool isMissing: !repo || !repo.localPath
 
-    implicitWidth: 320
-    implicitHeight: 54
+    implicitWidth: 300
+    implicitHeight: 52
     width: ListView.view ? ListView.view.width : implicitWidth
     clip: true
 
@@ -36,9 +36,9 @@ Item {
 
     RowLayout {
         anchors.fill: parent
-        anchors.leftMargin: Tokens.padding.small
-        anchors.rightMargin: Tokens.padding.small
-        spacing: Tokens.spacing.small
+        anchors.leftMargin: 8
+        anchors.rightMargin: 8
+        spacing: 8
 
         StyledRect {
             Layout.alignment: Qt.AlignVCenter
@@ -57,35 +57,38 @@ Item {
 
         ColumnLayout {
             Layout.fillWidth: true
+            Layout.preferredWidth: 0
             Layout.alignment: Qt.AlignVCenter
             spacing: 2
 
             RowLayout {
                 Layout.fillWidth: true
-                spacing: Tokens.spacing.extraSmall
+                spacing: 4
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: root.repo ? (root.repo.name || root.repo.fullName || "Unnamed Repo") : ""
+                    Layout.preferredWidth: 0
+                    text: root.repo ? (root.repo.name || root.repo.fullName || "Unnamed") : ""
                     color: Colours.palette.m3onSurface
                     font: Tokens.font.body.small
                     elide: Text.ElideRight
                 }
 
                 StateChip {
+                    Layout.alignment: Qt.AlignRight
                     state: root.repo && root.repo.state ? root.repo.state : (root.isMissing ? "missing" : "synced")
                 }
             }
 
             RowLayout {
                 Layout.fillWidth: true
-                spacing: Tokens.spacing.extraSmall
+                spacing: 4
 
                 StyledText {
                     Layout.fillWidth: true
+                    Layout.preferredWidth: 0
                     text: {
-                        if (!root.repo)
-                            return "";
+                        if (!root.repo) return "";
                         const owner = root.repo.owner || "local";
                         const branch = root.local && root.local.branch ? root.local.branch : (root.repo.defaultBranch || "main");
                         return owner + " · " + branch;
@@ -98,8 +101,7 @@ Item {
                 StyledText {
                     visible: !!root.local && ((root.local.ahead || 0) > 0 || (root.local.behind || 0) > 0)
                     text: {
-                        if (!root.local)
-                            return "";
+                        if (!root.local) return "";
                         const a = (root.local.ahead || 0) > 0 ? "↑" + root.local.ahead : "";
                         const b = (root.local.behind || 0) > 0 ? "↓" + root.local.behind : "";
                         return (a + " " + b).trim();

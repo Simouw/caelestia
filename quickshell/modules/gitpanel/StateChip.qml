@@ -29,17 +29,15 @@ StyledRect {
         }
     }
 
-    implicitWidth: row.implicitWidth + Tokens.padding.small * 2
-    implicitHeight: 22
-
+    implicitWidth: row.implicitWidth + 12
+    implicitHeight: 20
     radius: Tokens.rounding.full
     color: palette.bg
 
     RowLayout {
         id: row
-
         anchors.centerIn: parent
-        spacing: Tokens.spacing.extraSmall
+        spacing: 4
 
         StyledRect {
             Layout.alignment: Qt.AlignVCenter
@@ -51,7 +49,7 @@ StyledRect {
 
         StyledText {
             Layout.alignment: Qt.AlignVCenter
-            text: root.label || labelFor(root.state)
+            text: root.label || root.labelFor(root.state)
             color: root.palette.fg
             font: Tokens.font.label.small
         }
@@ -60,7 +58,7 @@ StyledRect {
     function labelFor(state: string): string {
         switch (state) {
         case "synced":
-            return "Up to date";
+            return "Clean";
         case "behind":
             return "Behind";
         case "ahead":
