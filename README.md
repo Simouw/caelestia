@@ -108,6 +108,17 @@ The script will:
 | `Ctrl + Alt + C` | Clear notifications |
 | `Ctrl + Super + Alt + R` | Restart Caelestia shell |
 
+### Window Management & Niri-style Zoom
+| Keybind | Action |
+| :--- | :--- |
+| `Super + Alt + F` | **Toggle Niri-Style Zoom** (Maximized view with 2D spatial navigation) |
+| `Super + Arrows` | **Directional Navigation** (Follows unzoomed layout; native workspace slide in horizontal & vertical) |
+| `Super + F` | Standard Fullscreen |
+| `Super + Q` | Close active window |
+| `Super + Alt + Space` | Toggle floating window |
+| `Super + Shift + Arrows` | Move window in direction |
+| `Super + P` | Pin window (picture-in-picture) |
+
 ### Wallpapers & Media
 | Keybind | Action |
 | :--- | :--- |
@@ -118,12 +129,20 @@ The script will:
 
 ---
 
+## 🎧 Audio & Shell Enhancements
+
+* **Per-App Audio Control & Routing**: Fine-grained per-app volume sliders, quick mute toggles, stream target routing, and combined multi-output playback directly in the bar popout and Nexus audio settings.
+* **Animated Dial Timer Widget**: Clock face widget in the vertical taskbar with a real-time revolving progress hand and playful vibration / tremble ringing animation when the timer expires.
+
+---
+
 ## 🙏 Credits & Acknowledgements
 
 This setup stands on the shoulders of fantastic open-source projects. Heartfelt thanks to all the respective authors for their incredible work:
 
 * **[Caelestia](https://github.com/caelestia-dots/caelestia)** & **[Caelestia Shell](https://github.com/caelestia-dots/shell)** — Created by the **[caelestia-dots](https://github.com/caelestia-dots)** team. The gorgeous Material You / morphing Wayland desktop shell that forms the complete foundation of this setup.
 * **[Caelestia Notes](https://github.com/Denzils-repo/Caelestia_Notes)** — Created entirely by **[Denzil](https://github.com/Denzils-repo)** (`@Denzils-repo`). The lightweight Markdown note renderer, repeating daily habits, streak tracking, to-do list, and topbar widget for Caelestia Quickshell. Integrated into this rice with full attribution.
+* **[op-caelestia-shell](https://github.com/OVERxPOWERED/op-caelestia-shell)** — Created by **[OVERxPOWERED](https://github.com/OVERxPOWERED)** (`@OVERxPOWERED`). Per-app audio routing & volume controls, multi-output combination, and enhanced PipeWire stream management.
 * **[Helium Browser](https://github.com/imputnet/helium)** — Created by the **[Imputnet](https://github.com/imputnet)** team. Minimalist, fast, and privacy-first web browser used as the default browser (`Super + W`).
 * **[LazyVim](https://github.com/LazyVim/LazyVim)** — Created by **[Folke Lemaitre](https://github.com/folke)** (`@folke`). The modern, blazing-fast Neovim distribution powering our editor configuration.
 * **[Base2Tone Colorschemes](https://github.com/atelierbram/Base2Tone)** — Created by **[Bram de Haan](https://github.com/atelierbram)** (`@atelierbram`). Elegant duotone syntax highlighting themes.

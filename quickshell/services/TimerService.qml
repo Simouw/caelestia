@@ -10,6 +10,7 @@ Singleton {
     property int remainingSeconds: 0
     property int totalSeconds: 0
     property bool running: false
+    property bool ringing: false
 
     function formatTime(sec: int): string {
         const m = Math.floor(sec / 60);
@@ -18,6 +19,8 @@ Singleton {
     }
 
     function startTimer(seconds: int): void {
+        root.ringing = false;
+        ringStopTimer.stop();
         root.totalSeconds = seconds;
         root.remainingSeconds = seconds;
         root.running = true;
@@ -25,13 +28,24 @@ Singleton {
     }
 
     function stopTimer(): void {
+        root.ringing = false;
+        ringStopTimer.stop();
         root.running = false;
         root.remainingSeconds = 0;
         root.totalSeconds = 0;
         countdownTimer.stop();
     }
 
+    function stopRinging(): void {
+        root.ringing = false;
+        ringStopTimer.stop();
+    }
+
     function togglePause(): void {
+        if (root.ringing) {
+            root.stopRinging();
+            return;
+        }
         root.running = !root.running;
         if (root.running)
             countdownTimer.restart();
@@ -47,6 +61,9 @@ Singleton {
     function onTimerFinished(): void {
         root.running = false;
         root.remainingSeconds = 0;
+        root.ringing = true;
+        ringStopTimer.restart();
+
         notifyProc.command = [
             "notify-send",
             "-u", "critical",
@@ -74,6 +91,13 @@ Singleton {
                 root.onTimerFinished();
             }
         }
+    }
+
+    Timer {
+        id: ringStopTimer
+        interval: 15000
+        repeat: false
+        onTriggered: root.ringing = false
     }
 
     Process {

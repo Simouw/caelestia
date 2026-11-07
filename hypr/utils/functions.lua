@@ -1,3 +1,5 @@
+local zoom = require("utils.zoom")
+
 local function wsaction(action, range, i)
     return function()
         local activews = hl.get_active_workspace()
@@ -17,7 +19,10 @@ local function wsaction(action, range, i)
         elseif action == "move_silent" then
             return hl.dispatch(hl.dsp.window.move({ workspace = z, follow = false }))
         else
-            return hl.dispatch(hl.dsp.focus({ workspace = z }))
+            -- Ensure standard horizontal slide animation when switching regular workspaces
+            hl.animation({ leaf = "workspaces", enabled = true, speed = 5, bezier = "standard", style = "slide" })
+            local target_ws = zoom.get_active_ws(z) or z
+            return hl.dispatch(hl.dsp.focus({ workspace = target_ws }))
         end
     end
 end
@@ -292,4 +297,5 @@ return {
     wsaction             = wsaction,
     move_actions         = move_actions,
     toggle               = toggle,
+    zoom                 = zoom,
 }

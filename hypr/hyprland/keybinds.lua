@@ -1,5 +1,6 @@
 local vars = require("variables")
 local fn   = require("utils.functions")
+local zoom = require("utils.zoom")
 
 
 -- Flags
@@ -111,9 +112,9 @@ create_bind(vars.kbToggleGroup, hl.dsp.group.toggle())
 create_bind(vars.kbUngroup, hl.dsp.window.move({ out_of_group = true }))
 create_bind(vars.kbGroupLockActive, hl.dsp.group.lock())
 
--- Window actions
+-- Window actions (with Niri-style 2D navigation when in zoomed mode)
 for _, dir in ipairs({ "left", "right", "up", "down" }) do
-    create_bind("SUPER + " .. dir, hl.dsp.focus({ direction = dir }))
+    create_bind("SUPER + " .. dir, zoom.navigate(dir))
     create_bind("SUPER + SHIFT + " .. dir, hl.dsp.window.move({ direction = dir }))
 end
 
@@ -143,7 +144,7 @@ create_bind(vars.kbWindowPip, function()
 end)
 create_bind(vars.kbPinWindow, hl.dsp.window.pin())
 create_bind(vars.kbWindowFullscreen, hl.dsp.window.fullscreen({ mode = "fullscreen" }))
-create_bind(vars.kbWindowBorderedFullscreen, hl.dsp.window.fullscreen({ mode = "maximized" }))
+create_bind(vars.kbWindowBorderedFullscreen, function() zoom.toggle() end)
 create_bind(vars.kbToggleWindowFloating, hl.dsp.window.float())
 create_bind(vars.kbCloseWindow, hl.dsp.window.close())
 

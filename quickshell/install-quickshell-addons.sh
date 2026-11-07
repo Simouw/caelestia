@@ -30,8 +30,11 @@ mkdir -p "$QS_CONFIG/modules/bar/components" \
          "$QS_CONFIG/modules/dashboard/notes" \
          "$QS_CONFIG/modules/gitpanel" \
          "$QS_CONFIG/modules/sidebar" \
+         "$QS_CONFIG/modules/nexus/pages/audio" \
+         "$QS_CONFIG/components/containers" \
          "$QS_CONFIG/services"
 
+cp "$ROOT/components/containers/HorizontalFadeFlickable.qml" "$QS_CONFIG/components/containers/HorizontalFadeFlickable.qml"
 cp -r "$ROOT/modules/gitpanel/"* "$QS_CONFIG/modules/gitpanel/"
 cp "$ROOT/modules/dashboard/NotesTab.qml" "$QS_CONFIG/modules/dashboard/NotesTab.qml"
 cp -r "$ROOT/modules/dashboard/notes/"* "$QS_CONFIG/modules/dashboard/notes/"
@@ -39,12 +42,16 @@ cp "$ROOT/modules/bar/components/TimerButton.qml" "$QS_CONFIG/modules/bar/compon
 cp "$ROOT/modules/bar/components/AiButton.qml" "$QS_CONFIG/modules/bar/components/AiButton.qml"
 cp "$ROOT/modules/bar/popouts/TimerPopout.qml" "$QS_CONFIG/modules/bar/popouts/TimerPopout.qml"
 cp "$ROOT/modules/bar/popouts/AiPopout.qml" "$QS_CONFIG/modules/bar/popouts/AiPopout.qml"
+cp "$ROOT/modules/bar/popouts/AudioPopout.qml" "$QS_CONFIG/modules/bar/popouts/AudioPopout.qml"
+cp "$ROOT/modules/nexus/pages/audio/AppVolumes.qml" "$QS_CONFIG/modules/nexus/pages/audio/AppVolumes.qml"
+cp "$ROOT/modules/nexus/pages/AudioPage.qml" "$QS_CONFIG/modules/nexus/pages/AudioPage.qml"
 cp -r "$ROOT/modules/bar/popouts/icons/"* "$QS_CONFIG/modules/bar/popouts/icons/"
 cp "$ROOT/modules/sidebar/Content.qml" "$QS_CONFIG/modules/sidebar/Content.qml"
 cp "$ROOT/services/CaelestiaGit.qml" "$QS_CONFIG/services/CaelestiaGit.qml"
 cp "$ROOT/services/NotesStore.qml" "$QS_CONFIG/services/NotesStore.qml"
 cp "$ROOT/services/TimerService.qml" "$QS_CONFIG/services/TimerService.qml"
 cp "$ROOT/services/AiService.qml" "$QS_CONFIG/services/AiService.qml"
+cp "$ROOT/services/Audio.qml" "$QS_CONFIG/services/Audio.qml"
 
 # 2. Patch Quickshell core files idempotently
 python3 - "$QS_CONFIG" <<'PY'
