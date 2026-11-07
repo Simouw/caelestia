@@ -40,6 +40,7 @@ cp "$ROOT/modules/dashboard/NotesTab.qml" "$QS_CONFIG/modules/dashboard/NotesTab
 cp -r "$ROOT/modules/dashboard/notes/"* "$QS_CONFIG/modules/dashboard/notes/"
 cp "$ROOT/modules/bar/components/TimerButton.qml" "$QS_CONFIG/modules/bar/components/TimerButton.qml"
 cp "$ROOT/modules/bar/components/AiButton.qml" "$QS_CONFIG/modules/bar/components/AiButton.qml"
+cp "$ROOT/modules/bar/components/AudioButton.qml" "$QS_CONFIG/modules/bar/components/AudioButton.qml"
 cp "$ROOT/modules/bar/popouts/TimerPopout.qml" "$QS_CONFIG/modules/bar/popouts/TimerPopout.qml"
 cp "$ROOT/modules/bar/popouts/AiPopout.qml" "$QS_CONFIG/modules/bar/popouts/AiPopout.qml"
 cp "$ROOT/modules/bar/popouts/AudioPopout.qml" "$QS_CONFIG/modules/bar/popouts/AudioPopout.qml"
@@ -225,33 +226,56 @@ if bar.exists():
                         ...res.slice(insertIdx)
                     ];
                 }
+                if (!res.some(e => e.id === "audio")) {
+                    const statusIdx = res.findIndex(e => e.id === "statusIcons");
+                    const insertIdx = statusIdx >= 0 ? statusIdx : Math.max(0, res.length - 1);
+                    res = [
+                        ...res.slice(0, insertIdx),
+                        { id: "audio", enabled: true },
+                        ...res.slice(insertIdx)
+                    ];
+                }
                 return res;""",
                   'id === "ai"',
-                  "Bar.qml ai entry injection")
+                  "Bar.qml ai/audio entry injection")
 
-    if "AiButton" not in text:
+    if 'id === "audio"' not in text:
+        edit_file(bar,
+                  """                if (!res.some(e => e.id === "ai")) {
+                    const statusIdx = res.findIndex(e => e.id === "statusIcons");
+                    const insertIdx = statusIdx >= 0 ? statusIdx : Math.max(0, res.length - 1);
+                    res = [
+                        ...res.slice(0, insertIdx),
+                        { id: "ai", enabled: true },
+                        ...res.slice(insertIdx)
+                    ];
+                }
+                return res;""",
+                  """                if (!res.some(e => e.id === "ai")) {
+                    const statusIdx = res.findIndex(e => e.id === "statusIcons");
+                    const insertIdx = statusIdx >= 0 ? statusIdx : Math.max(0, res.length - 1);
+                    res = [
+                        ...res.slice(0, insertIdx),
+                        { id: "ai", enabled: true },
+                        ...res.slice(insertIdx)
+                    ];
+                }
+                if (!res.some(e => e.id === "audio")) {
+                    const statusIdx = res.findIndex(e => e.id === "statusIcons");
+                    const insertIdx = statusIdx >= 0 ? statusIdx : Math.max(0, res.length - 1);
+                    res = [
+                        ...res.slice(0, insertIdx),
+                        { id: "audio", enabled: true },
+                        ...res.slice(insertIdx)
+                    ];
+                }
+                return res;""",
+                  'id === "audio"',
+                  "Bar.qml audio entry injection")
+
+    if "AudioButton" not in text:
         edit_file(bar,
                   """            DelegateChoice {
-                roleValue: "timer"
-                delegate: EntryWrapper {
-                    TimerButton {
-                        objectName: "taskbarTimerButton"
-                        screenState: root.screenState
-                    }
-                }
-            }""",
-                  """            DelegateChoice {
-                roleValue: "timer"
-                delegate: EntryWrapper {
-                    TimerButton {
-                        objectName: "taskbarTimerButton"
-                        screenState: root.screenState
-                        bar: root
-                        popouts: root.popouts
-                    }
-                }
-            }
-            DelegateChoice {
                 roleValue: "ai"
                 delegate: EntryWrapper {
                     AiButton {
@@ -262,8 +286,30 @@ if bar.exists():
                     }
                 }
             }""",
-                  "AiButton {}",
-                  "Bar.qml AiButton delegate")
+                  """            DelegateChoice {
+                roleValue: "ai"
+                delegate: EntryWrapper {
+                    AiButton {
+                        objectName: "taskbarAiButton"
+                        screenState: root.screenState
+                        bar: root
+                        popouts: root.popouts
+                    }
+                }
+            }
+            DelegateChoice {
+                roleValue: "audio"
+                delegate: EntryWrapper {
+                    AudioButton {
+                        objectName: "taskbarAudioButton"
+                        screenState: root.screenState
+                        bar: root
+                        popouts: root.popouts
+                    }
+                }
+            }""",
+                  "AudioButton {}",
+                  "Bar.qml AudioButton delegate")
 
 # --- modules/bar/popouts/Content.qml ---
 popouts_content = qs / "modules/bar/popouts/Content.qml"
