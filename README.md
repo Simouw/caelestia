@@ -108,17 +108,6 @@ The script will:
 | `Ctrl + Alt + C` | Clear notifications |
 | `Ctrl + Super + Alt + R` | Restart Caelestia shell |
 
-### Window Management & Niri-style Zoom
-| Keybind | Action |
-| :--- | :--- |
-| `Super + Alt + F` | **Toggle Niri-Style Zoom** (Maximized view with 2D spatial navigation) |
-| `Super + Arrows` | **Directional Navigation** (Follows unzoomed layout; native workspace slide in horizontal & vertical) |
-| `Super + F` | Standard Fullscreen |
-| `Super + Q` | Close active window |
-| `Super + Alt + Space` | Toggle floating window |
-| `Super + Shift + Arrows` | Move window in direction |
-| `Super + P` | Pin window (picture-in-picture) |
-
 ### Wallpapers & Media
 | Keybind | Action |
 | :--- | :--- |
